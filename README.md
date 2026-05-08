@@ -119,7 +119,19 @@ The repository includes a GitHub Actions workflow at
 `.github/workflows/build-package.yml`. It runs on pushes, pull requests, tag
 pushes matching `v*`, and manual dispatches. The workflow installs FontForge,
 runs the unit tests, builds all 16 OTF files, creates `dist/SNUEdgeSans.zip`,
-verifies the package, and uploads it as a workflow artifact.
+verifies the package, and uploads it as a workflow artifact. When the workflow
+is triggered by a tag matching `v*`, it also publishes a GitHub Release and
+attaches `SNUEdgeSans.zip` as a release asset.
+
+Create and push a release tag:
+
+```sh
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+Reusing an existing release tag is intentionally treated as an error. Use a new
+version tag for each published package.
 
 ## Repository Layout
 
