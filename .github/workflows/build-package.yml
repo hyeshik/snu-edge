@@ -1,0 +1,47 @@
+name: Build Package
+
+on:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "v*"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: Build OTF package
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fontforge make python3 unzip zip
+
+      - name: Run unit tests
+        run: make test
+
+      - name: Build package
+        run: make package
+
+      - name: Verify package
+        run: |
+          test "$(find instance_otf -maxdepth 1 -name 'SNUEdgeSans-*.otf' | wc -l)" -eq 16
+          test -f dist/SNUEdgeSans.zip
+          unzip -l dist/SNUEdgeSans.zip
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SNUEdgeSans-${{ github.sha }}
+          path: dist/SNUEdgeSans.zip
+          if-no-files-found: error
+          retention-days: 30
