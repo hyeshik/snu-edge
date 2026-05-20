@@ -135,6 +135,22 @@ class BuildSnuEdgeSansTests(unittest.TestCase):
         self.assertAlmostEqual(metrics.outline_width, 797.76)
         self.assertEqual(builder.derive_synthetic_weight_width([44, 70, 99, 128]), 14)
 
+    def test_light_lowercase_e_caps_synthetic_weight_to_preserve_counter_shape(self):
+        builder = load_builder()
+
+        self.assertEqual(
+            builder.synthetic_weight_offset_for_codepoint("Light", ord("e"), 14),
+            10,
+        )
+        self.assertEqual(
+            builder.synthetic_weight_offset_for_codepoint("Light", ord("a"), 14),
+            14,
+        )
+        self.assertEqual(
+            builder.synthetic_weight_offset_for_codepoint("Medium", ord("e"), 14),
+            14,
+        )
+
     def test_italic_slants_non_cjk_and_keeps_cjk_upright(self):
         builder = load_builder()
 

@@ -13,7 +13,7 @@ from typing import Iterable, Iterator, NamedTuple
 
 FAMILY_NAME = "SNU Edge Sans"
 POSTSCRIPT_FAMILY_NAME = "SNUEdgeSans"
-VERSION = "001.000"
+VERSION = "002.000"
 DEFAULT_SOURCE_ZIP_URL = (
     "https://campaign.naver.com/nanumsquare_neo/download/NaverNanumSquare.zip"
 )
@@ -24,6 +24,8 @@ DEFAULT_GLYPH_X_SCALE = 0.96
 DEFAULT_SPACING_SCALE = 0.86
 DEFAULT_ITALIC_ANGLE = 10.0
 SYNTHETIC_WEIGHT_REFERENCE_CODEPOINT = 0x49
+# NanumSquare Light lowercase e deforms with the full synthetic offset.
+SYNTHETIC_WEIGHT_CODEPOINT_CAPS = {"Light": {ord("e"): 10}}
 MASTER_LABELS = ("Light", "Regular", "Bold", "ExtraBold")
 FONT_SUFFIXES = {".otf", ".ttf", ".ttc"}
 
@@ -244,6 +246,15 @@ def derive_synthetic_weight_width(master_widths: list[float]) -> int:
     return max(1, round(average_delta / 2))
 
 
+def synthetic_weight_offset_for_codepoint(
+    style: str, codepoint: int, offset_width: int
+) -> int:
+    cap = SYNTHETIC_WEIGHT_CODEPOINT_CAPS.get(style, {}).get(codepoint)
+    if cap is None:
+        return offset_width
+    return min(offset_width, cap)
+
+
 def style_name(style: str, italic: bool) -> str:
     return f"{style} Italic" if italic else style
 
@@ -385,7 +396,7 @@ def adjust_encoded_glyphs(font, x_scale: float, spacing_scale: float) -> int:
     return changed
 
 
-def apply_synthetic_weight(font, offset_width: int, quiet: bool) -> int:
+def apply_synthetic_weight(font, style: str, offset_width: int, quiet: bool) -> int:
     if not offset_width:
         return 0
 
@@ -393,9 +404,14 @@ def apply_synthetic_weight(font, offset_width: int, quiet: bool) -> int:
     with suppress_c_stderr(quiet):
         for glyph in list(font.glyphs()):
             if glyph.unicode >= 0:
+                glyph_offset_width = synthetic_weight_offset_for_codepoint(
+                    style, glyph.unicode, offset_width
+                )
+                if not glyph_offset_width:
+                    continue
                 if glyph.references:
                     glyph.unlinkRef()
-                glyph.changeWeight(offset_width, "auto", 0, 0, "auto")
+                glyph.changeWeight(glyph_offset_width, "auto", 0, 0, "auto")
                 changed += 1
     return changed
 
@@ -490,6 +506,7 @@ def build_variant(fontforge, args, masters: dict[str, Path], spec: StyleSpec, it
         synthetic_offset_width = spec.synthetic_weight_steps * args.synthetic_weight_width
         synthetic_changed = apply_synthetic_weight(
             font,
+            spec.style,
             synthetic_offset_width,
             quiet,
         )

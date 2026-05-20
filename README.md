@@ -81,6 +81,10 @@ Default geometry settings:
 - Sidebearing spacing scale: `0.86`
 - Italic slant angle for non-CJK glyphs: `10deg`
 
+The Light build caps the synthetic offset for lowercase `e` only. This avoids a
+FontForge outline-offset artifact in the upper-right counter while keeping the
+rest of the weight synthesis unchanged.
+
 The script accepts optional style names and build flags:
 
 ```sh
