@@ -21,7 +21,7 @@ On macOS with Homebrew:
 
 ```sh
 brew install fontforge
-python3 -m pip install fonttools freetype-py numpy pillow uharfbuzz
+python3 -m pip install --requirement requirements.txt
 ```
 
 ## Quick Start
