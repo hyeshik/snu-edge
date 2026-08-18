@@ -44,14 +44,18 @@ jobs:
       - name: Verify package
         run: |
           test "$(find instance_otf -maxdepth 1 -name 'SNUEdge-*.otf' | wc -l)" -eq 16
-          test -f dist/SNUEdge.zip
-          unzip -l dist/SNUEdge.zip
+          test "$(find dist -maxdepth 1 -name 'SNUEdge-*.zip' | wc -l)" -eq 1
+          package="$(find dist -maxdepth 1 -name 'SNUEdge-*.zip' -print -quit)"
+          package_name="$(basename "${package}" .zip)"
+          archive_root="$(unzip -Z1 "${package}" | sed -n '1s|/.*||p')"
+          test "${archive_root}" = "${package_name}"
+          unzip -l "${package}"
 
       - name: Upload package artifact
         uses: actions/upload-artifact@v7
         with:
           name: SNUEdge-${{ github.sha }}
-          path: dist/SNUEdge.zip
+          path: dist/SNUEdge-*.zip
           if-no-files-found: error
           retention-days: 30
 
@@ -76,7 +80,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "${GITHUB_REF_NAME}" \
-            dist/SNUEdge.zip \
+            dist/SNUEdge-*.zip \
             --title "SNU Edge ${GITHUB_REF_NAME}" \
             --generate-notes \
             --verify-tag

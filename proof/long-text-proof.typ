@@ -26,7 +26,7 @@
   (name: "Medium", edge-weight: 500, latin-weight: 475),
   (name: "SemiBold", edge-weight: 600, latin-weight: 535),
   (name: "Bold", edge-weight: 700, latin-weight: 585),
-  (name: "ExtraBlack", edge-weight: 800, latin-weight: 645),
+  (name: "ExtraBold", edge-weight: 800, latin-weight: 645),
   (name: "Black", edge-weight: 900, latin-weight: 690),
 )
 #let style-by-name(name) = styles.find(item => item.name == name)
@@ -51,11 +51,11 @@
   if italic {
     let y-guards = (
       Thin: 40, Light: 45, Regular: 45, Medium: 50,
-      SemiBold: 50, Bold: 55, ExtraBlack: 55, Black: 65,
+      SemiBold: 50, Bold: 55, ExtraBold: 55, Black: 65,
     )
     let f-guards = (
       Thin: 105, Light: 110, Regular: 110, Medium: 115,
-      SemiBold: 110, Bold: 115, ExtraBlack: 110, Black: 115,
+      SemiBold: 110, Bold: 115, ExtraBold: 110, Black: 115,
     )
     let units = if terminal == "y" {
       y-guards.at(style.name)

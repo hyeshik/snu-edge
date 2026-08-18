@@ -20,7 +20,7 @@ class BuildSnuEdgeTests(unittest.TestCase):
 
         self.assertEqual(builder.FAMILY_NAME, "SNU Edge")
         self.assertEqual(builder.POSTSCRIPT_FAMILY_NAME, "SNUEdge")
-        self.assertEqual(builder.VERSION, "0.300")
+        self.assertEqual(builder.VERSION, "0.301")
         self.assertEqual(
             builder.DEFAULT_SOURCE_ZIP_URL,
             "https://campaign.naver.com/nanumsquare_neo/download/NaverNanumSquare.zip",
@@ -38,7 +38,7 @@ class BuildSnuEdgeTests(unittest.TestCase):
 
         self.assertEqual(
             list(specs),
-            ["Thin", "Light", "Regular", "Medium", "SemiBold", "Bold", "ExtraBlack", "Black"],
+            ["Thin", "Light", "Regular", "Medium", "SemiBold", "Bold", "ExtraBold", "Black"],
         )
         self.assertEqual(specs["Thin"].source_label, "Light")
         self.assertEqual(specs["Light"].source_label, "Light")
@@ -49,7 +49,7 @@ class BuildSnuEdgeTests(unittest.TestCase):
         self.assertEqual(specs["SemiBold"].source_label, "Bold")
         self.assertEqual(specs["Bold"].source_label, "Bold")
         self.assertEqual(specs["Bold"].synthetic_weight_steps, 1)
-        self.assertEqual(specs["ExtraBlack"].source_label, "ExtraBold")
+        self.assertEqual(specs["ExtraBold"].source_label, "ExtraBold")
         self.assertEqual(specs["Black"].source_label, "ExtraBold")
         self.assertEqual(specs["Black"].synthetic_weight_steps, 1)
         self.assertEqual(
@@ -163,6 +163,31 @@ class BuildSnuEdgeTests(unittest.TestCase):
         self.assertEqual(metrics.advance_width, 593)
         self.assertAlmostEqual(metrics.left_side_bearing, 38.7)
         self.assertAlmostEqual(metrics.right_side_bearing, 38.7)
+
+    def test_latin_outline_overlaps_are_removed_after_unlinking_references(self):
+        builder = load_builder()
+
+        class FakeGlyph:
+            references = (("component", (1, 0, 0, 1, 0, 0)),)
+
+            def __init__(self):
+                self.events = []
+
+            def unlinkRef(self):
+                self.events.append("unlink")
+                self.references = ()
+
+            def selfIntersects(self):
+                self.events.append("inspect")
+                return True
+
+            def removeOverlap(self):
+                self.events.append("remove")
+
+        glyph = FakeGlyph()
+
+        self.assertTrue(builder.normalize_latin_outline(glyph))
+        self.assertEqual(glyph.events, ["unlink", "inspect", "remove"])
 
     def test_obsolete_nanum_latin_exceptions_are_removed(self):
         builder = load_builder()

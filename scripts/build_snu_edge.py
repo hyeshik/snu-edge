@@ -12,7 +12,7 @@ from typing import Iterable, Iterator, NamedTuple
 
 FAMILY_NAME = "SNU Edge"
 POSTSCRIPT_FAMILY_NAME = "SNUEdge"
-VERSION = "0.300"
+VERSION = "0.301"
 DEFAULT_SOURCE_ZIP_URL = (
     "https://campaign.naver.com/nanumsquare_neo/download/NaverNanumSquare.zip"
 )
@@ -52,7 +52,7 @@ STYLE_SPECS = (
     StyleSpec("Medium", 500, "Regular", 475, 1),
     StyleSpec("SemiBold", 600, "Bold", 535),
     StyleSpec("Bold", 700, "Bold", 585, 1),
-    StyleSpec("ExtraBlack", 800, "ExtraBold", 645),
+    StyleSpec("ExtraBold", 800, "ExtraBold", 645),
     StyleSpec("Black", 900, "ExtraBold", 690, 1),
 )
 
@@ -241,7 +241,7 @@ def build_parser() -> argparse.ArgumentParser:
         nargs="*",
         help=(
             "Optional subset of styles: Thin Light Regular Medium SemiBold Bold "
-            "ExtraBlack Black"
+            "ExtraBold Black"
         ),
     )
     italic_group = parser.add_mutually_exclusive_group()
@@ -440,6 +440,14 @@ def remove_cjk_from_latin(font) -> int:
             removed += 1
     return removed
 
+def normalize_latin_outline(glyph) -> bool:
+    if glyph.references:
+        glyph.unlinkRef()
+    if not glyph.selfIntersects():
+        return False
+    glyph.removeOverlap()
+    return True
+
 def adjust_latin_glyph(
     glyph,
     *,
@@ -447,22 +455,21 @@ def adjust_latin_glyph(
     spacing_scale: float,
     y_scale: float,
     y_shift: float,
-) -> None:
+) -> bool:
     original_width = glyph.width
     xmin, _, xmax, _ = glyph.boundingBox()
     left_side_bearing = glyph.left_side_bearing
     right_side_bearing = glyph.right_side_bearing
 
-    if glyph.references:
-        glyph.unlinkRef()
+    overlaps_removed = normalize_latin_outline(glyph)
     glyph.transform((x_scale, 0, 0, y_scale, 0, y_shift))
 
     if original_width == 0:
         glyph.width = 0
-        return
+        return overlaps_removed
     if xmax <= xmin:
         glyph.width = round(original_width * spacing_scale)
-        return
+        return overlaps_removed
 
     metrics = adjusted_glyph_metrics(
         xmin=xmin,
@@ -474,6 +481,7 @@ def adjust_latin_glyph(
     )
     glyph.left_side_bearing = round(metrics.left_side_bearing)
     glyph.width = metrics.advance_width
+    return overlaps_removed
 
 def transform_latin_font(
     font,
@@ -482,13 +490,14 @@ def transform_latin_font(
     spacing_ratio: float,
     y_scale: float,
     y_shift: float,
-) -> tuple[int, int]:
+) -> tuple[int, int, int]:
     font.reencode("unicode")
     removed_cjk = remove_cjk_from_latin(font)
     spacing_scale = x_scale * spacing_ratio
     changed = 0
+    overlaps_removed = 0
     for glyph in list(font.glyphs()):
-        adjust_latin_glyph(
+        overlaps_removed += adjust_latin_glyph(
             glyph,
             x_scale=x_scale,
             spacing_scale=spacing_scale,
@@ -496,7 +505,7 @@ def transform_latin_font(
             y_shift=y_shift,
         )
         changed += 1
-    return changed, removed_cjk
+    return changed, removed_cjk, overlaps_removed
 
 def rewrite_metadata(font, spec: StyleSpec, italic: bool, italic_angle: float) -> None:
     output_style = style_name(spec.style, italic)
@@ -573,7 +582,9 @@ def build_variant(
         instantiate_montserrat(source_path, instance_path, spec.latin_weight)
         latin = open_source_font(fontforge, instance_path, quiet)
         try:
-            latin_adjusted, latin_cjk_removed = transform_latin_font(
+            (
+                latin_adjusted, latin_cjk_removed, latin_overlaps_removed
+            ) = transform_latin_font(
                 latin,
                 x_scale=args.latin_glyph_x_scale,
                 spacing_ratio=args.latin_spacing_ratio,
@@ -634,6 +645,7 @@ def build_variant(
         f"nanum_non_cjk_removed={nanum_removed}, "
         f"nanum_layout_lookups_removed={removed_lookups}, "
         f"latin_adjusted={latin_adjusted}, latin_cjk_removed={latin_cjk_removed}, "
+        f"latin_overlaps_removed={latin_overlaps_removed}, "
         f"latin_weight={spec.latin_weight}, "
         f"latin_x_scale={args.latin_glyph_x_scale:.4f}, "
         f"latin_spacing_ratio={args.latin_spacing_ratio:.4f}, "

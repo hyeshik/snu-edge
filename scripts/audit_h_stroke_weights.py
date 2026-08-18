@@ -20,7 +20,7 @@ STYLES = (
     ("Medium", 500, 475),
     ("SemiBold", 600, 535),
     ("Bold", 700, 585),
-    ("ExtraBlack", 800, 645),
+    ("ExtraBold", 800, 645),
     ("Black", 900, 690),
 )
 WIDTH_SCALE = 0.86

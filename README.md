@@ -180,7 +180,7 @@ weight sources:
 - Medium: NanumSquare Regular plus one CJK synthetic step; Montserrat 475
 - SemiBold: NanumSquare Bold; Montserrat 535
 - Bold: NanumSquare Bold plus one CJK synthetic step; Montserrat 585
-- ExtraBlack: NanumSquare ExtraBold; Montserrat 645
+- ExtraBold: NanumSquare ExtraBold; Montserrat 645
 - Black: NanumSquare ExtraBold plus one CJK synthetic step; Montserrat 690
 
 This produces 16 OTF files in total.
@@ -248,16 +248,16 @@ make package SOURCE_DIR=path/to/NanumSquare/fonts BUILD_FLAGS=--no-download
 The repository includes a GitHub Actions workflow at
 `.github/workflows/build-package.yml`. It runs on pushes, pull requests, tag
 pushes matching `v*`, and manual dispatches. The workflow installs FontForge,
-runs the unit tests, builds all 16 OTF files, creates `dist/SNUEdge.zip`,
+runs the unit tests, builds all 16 OTF files, creates `dist/SNUEdge-0.3.1.zip`,
 verifies the package, and uploads it as a workflow artifact. When the workflow
 is triggered by a tag matching `v*`, it also publishes a GitHub Release and
-attaches `SNUEdge.zip` as a release asset.
+attaches `SNUEdge-0.3.1.zip` as a release asset.
 
 Create and push a release tag:
 
 ```sh
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.3.1
+git push origin v0.3.1
 ```
 
 Reusing an existing release tag is intentionally treated as an error. Use a new

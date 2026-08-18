@@ -8,7 +8,8 @@ OUTPUT_DIR ?= instance_otf
 MONTSERRAT_DIR ?= vendor/montserrat
 V1_REFERENCE_DIR ?= proof/generated/v1_otf
 BUILD_FLAGS ?=
-PACKAGE_NAME ?= SNUEdge
+PACKAGE_VERSION ?= 0.3.1
+PACKAGE_NAME ?= SNUEdge-$(PACKAGE_VERSION)
 PACKAGE_DIR ?= dist/$(PACKAGE_NAME)
 PACKAGE_ZIP ?= dist/$(PACKAGE_NAME).zip
 PROOF_SOURCE ?= proof/montserrat-proof.typ
@@ -82,7 +83,7 @@ long-proof: build
 package: verify
 	rm -rf dist
 	mkdir -p "$(PACKAGE_DIR)"
-	cp LICENSE README.md "$(PACKAGE_DIR)/"
+	cp LICENSE README.md requirements.txt "$(PACKAGE_DIR)/"
 	cp "$(OUTPUT_DIR)"/SNUEdge-*.otf "$(PACKAGE_DIR)/"
 	cd dist && zip -qr "$(PACKAGE_NAME).zip" "$(PACKAGE_NAME)"
 	test -f "$(PACKAGE_ZIP)"

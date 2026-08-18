@@ -22,7 +22,7 @@ STYLES = (
     ("Medium", 475),
     ("SemiBold", 535),
     ("Bold", 585),
-    ("ExtraBlack", 645),
+    ("ExtraBold", 645),
     ("Black", 690),
 )
 

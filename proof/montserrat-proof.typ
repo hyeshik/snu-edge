@@ -69,7 +69,7 @@
     ),
   ),
   (
-    name: "ExtraBlack", edge-weight: 800, chosen: 645,
+    name: "ExtraBold", edge-weight: 800, chosen: 645,
     candidates: (
       (weight: 625, reason: "overall ink"),
       (weight: 640, reason: "H stem @ 86%"),
@@ -264,11 +264,11 @@
   if italic {
     let y-guards = (
       Thin: 40, Light: 45, Regular: 45, Medium: 50,
-      SemiBold: 50, Bold: 55, ExtraBlack: 55, Black: 65,
+      SemiBold: 50, Bold: 55, ExtraBold: 55, Black: 65,
     )
     let f-guards = (
       Thin: 105, Light: 110, Regular: 110, Medium: 115,
-      SemiBold: 110, Bold: 115, ExtraBlack: 110, Black: 115,
+      SemiBold: 110, Bold: 115, ExtraBold: 110, Black: 115,
     )
     let units = if terminal == "y" {
       y-guards.at(style.name)
