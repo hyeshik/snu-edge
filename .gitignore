@@ -1,6 +1,11 @@
 __pycache__/
 *.py[cod]
 .DS_Store
+._*
 dist/
 instance_otf/
 vendor/
+Montserrat/
+proof/generated/
+proof/*.pdf
+proof/*.png

@@ -3,39 +3,41 @@ from __future__ import annotations
 
 import argparse
 import contextlib
-import math
 import os
+import tempfile
 import urllib.request
 import zipfile
 from pathlib import Path
 from typing import Iterable, Iterator, NamedTuple
 
-
-FAMILY_NAME = "SNU Edge Sans"
-POSTSCRIPT_FAMILY_NAME = "SNUEdgeSans"
-VERSION = "002.000"
+FAMILY_NAME = "SNU Edge"
+POSTSCRIPT_FAMILY_NAME = "SNUEdge"
+VERSION = "003.000"
 DEFAULT_SOURCE_ZIP_URL = (
     "https://campaign.naver.com/nanumsquare_neo/download/NaverNanumSquare.zip"
 )
 DEFAULT_DOWNLOAD_DIR = "vendor/downloads"
 DEFAULT_SOURCE_DIR = "vendor/source"
+DEFAULT_MONTSERRAT_DIR = "vendor/montserrat"
 DEFAULT_OUTPUT_DIR = "instance_otf"
-DEFAULT_GLYPH_X_SCALE = 0.96
-DEFAULT_SPACING_SCALE = 0.86
-DEFAULT_ITALIC_ANGLE = 10.0
+DEFAULT_CJK_GLYPH_X_SCALE = 0.96
+DEFAULT_CJK_SPACING_SCALE = 0.86
+DEFAULT_LATIN_GLYPH_X_SCALE = 0.86
+DEFAULT_LATIN_SPACING_RATIO = 0.90
+DEFAULT_LATIN_Y_SCALE = 1.028
+DEFAULT_LATIN_Y_SHIFT = -26
+MONTSERRAT_UPRIGHT_FILENAME = "Montserrat-VariableFont_wght.ttf"
+MONTSERRAT_ITALIC_FILENAME = "Montserrat-Italic-VariableFont_wght.ttf"
 SYNTHETIC_WEIGHT_REFERENCE_CODEPOINT = 0x49
-# NanumSquare Light lowercase e deforms with the full synthetic offset.
-SYNTHETIC_WEIGHT_CODEPOINT_CAPS = {"Light": {ord("e"): 10}}
 MASTER_LABELS = ("Light", "Regular", "Bold", "ExtraBold")
 FONT_SUFFIXES = {".otf", ".ttf", ".ttc"}
-
 
 class StyleSpec(NamedTuple):
     style: str
     weight: int
     source_label: str
+    latin_weight: int
     synthetic_weight_steps: int = 0
-
 
 class AdjustedMetrics(NamedTuple):
     advance_width: int
@@ -43,18 +45,16 @@ class AdjustedMetrics(NamedTuple):
     right_side_bearing: float
     outline_width: float
 
-
 STYLE_SPECS = (
-    StyleSpec("Thin", 100, "Light"),
-    StyleSpec("Light", 300, "Light", 1),
-    StyleSpec("Regular", 400, "Regular"),
-    StyleSpec("Medium", 500, "Regular", 1),
-    StyleSpec("SemiBold", 600, "Bold"),
-    StyleSpec("Bold", 700, "Bold", 1),
-    StyleSpec("ExtraBlack", 800, "ExtraBold"),
-    StyleSpec("Black", 900, "ExtraBold", 1),
+    StyleSpec("Thin", 100, "Light", 285),
+    StyleSpec("Light", 300, "Light", 355, 1),
+    StyleSpec("Regular", 400, "Regular", 420),
+    StyleSpec("Medium", 500, "Regular", 475, 1),
+    StyleSpec("SemiBold", 600, "Bold", 535),
+    StyleSpec("Bold", 700, "Bold", 585, 1),
+    StyleSpec("ExtraBlack", 800, "ExtraBold", 645),
+    StyleSpec("Black", 900, "ExtraBold", 690, 1),
 )
-
 
 CJK_CODEPOINT_RANGES = (
     (0x1100, 0x11FF),
@@ -86,7 +86,6 @@ CJK_CODEPOINT_RANGES = (
     (0x30000, 0x3134F),
 )
 
-
 @contextlib.contextmanager
 def suppress_c_stderr(enabled: bool) -> Iterator[None]:
     if not enabled:
@@ -103,7 +102,6 @@ def suppress_c_stderr(enabled: bool) -> Iterator[None]:
         os.close(saved_stderr)
         os.close(devnull)
 
-
 def normalized_stem(path: Path) -> str:
     return (
         path.stem.lower()
@@ -112,7 +110,6 @@ def normalized_stem(path: Path) -> str:
         .replace("_", "")
         .replace(".", "")
     )
-
 
 def classify_master(path: Path) -> str | None:
     if path.suffix.lower() not in FONT_SUFFIXES:
@@ -131,7 +128,6 @@ def classify_master(path: Path) -> str | None:
         return "Light"
     return None
 
-
 def discover_font_files(source_dir: Path) -> list[Path]:
     if not source_dir.exists():
         return []
@@ -140,7 +136,6 @@ def discover_font_files(source_dir: Path) -> list[Path]:
         for path in source_dir.rglob("*")
         if path.is_file() and path.suffix.lower() in FONT_SUFFIXES
     ]
-
 
 def discover_master_paths(paths: Iterable[Path]) -> dict[str, Path]:
     masters: dict[str, Path] = {}
@@ -165,7 +160,6 @@ def discover_master_paths(paths: Iterable[Path]) -> dict[str, Path]:
         )
     return masters
 
-
 def download_zip(url: str, destination: Path) -> Path:
     destination.parent.mkdir(parents=True, exist_ok=True)
     if destination.exists():
@@ -174,7 +168,6 @@ def download_zip(url: str, destination: Path) -> Path:
     print(f"Downloading {url}")
     urllib.request.urlretrieve(url, destination)
     return destination
-
 
 def safe_extract_zip(zip_path: Path, destination: Path) -> None:
     destination.mkdir(parents=True, exist_ok=True)
@@ -185,7 +178,6 @@ def safe_extract_zip(zip_path: Path, destination: Path) -> None:
             if not str(target).startswith(str(root)):
                 raise SystemExit(f"Refusing unsafe zip member: {member.filename}")
         archive.extractall(destination)
-
 
 def ensure_source_fonts(args: argparse.Namespace) -> dict[str, Path]:
     source_dir = Path(args.source_dir)
@@ -203,10 +195,8 @@ def ensure_source_fonts(args: argparse.Namespace) -> dict[str, Path]:
     safe_extract_zip(archive_path, source_dir)
     return discover_master_paths(discover_font_files(source_dir))
 
-
 def is_cjk_codepoint(codepoint: int) -> bool:
     return any(start <= codepoint <= end for start, end in CJK_CODEPOINT_RANGES)
-
 
 def adjusted_glyph_metrics(
     *,
@@ -223,15 +213,6 @@ def adjusted_glyph_metrics(
     advance_width = round(outline_width + target_left + target_right)
     return AdjustedMetrics(advance_width, target_left, target_right, outline_width)
 
-
-def should_slant_codepoint(codepoint: int) -> bool:
-    return codepoint >= 0 and not is_cjk_codepoint(codepoint)
-
-
-def italic_slope(angle: float = DEFAULT_ITALIC_ANGLE) -> float:
-    return math.tan(math.radians(angle))
-
-
 def derive_synthetic_weight_width(master_widths: list[float]) -> int:
     if len(master_widths) < 2:
         return 0
@@ -245,26 +226,16 @@ def derive_synthetic_weight_width(master_widths: list[float]) -> int:
     average_delta = sum(positive_deltas) / len(positive_deltas)
     return max(1, round(average_delta / 2))
 
-
-def synthetic_weight_offset_for_codepoint(
-    style: str, codepoint: int, offset_width: int
-) -> int:
-    cap = SYNTHETIC_WEIGHT_CODEPOINT_CAPS.get(style, {}).get(codepoint)
-    if cap is None:
-        return offset_width
-    return min(offset_width, cap)
-
-
 def style_name(style: str, italic: bool) -> str:
     return f"{style} Italic" if italic else style
-
 
 def postscript_style_name(style: str, italic: bool) -> str:
     return style_name(style, italic).replace(" ", "")
 
-
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Build SNU Edge Sans from NanumSquare.")
+    parser = argparse.ArgumentParser(
+        description="Build SNU Edge from NanumSquare CJK and Montserrat non-CJK glyphs."
+    )
     parser.add_argument(
         "styles",
         nargs="*",
@@ -291,25 +262,44 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--download-dir", default=DEFAULT_DOWNLOAD_DIR)
     parser.add_argument("--source-dir", default=DEFAULT_SOURCE_DIR)
+    parser.add_argument("--montserrat-dir", default=DEFAULT_MONTSERRAT_DIR)
     parser.add_argument("--output-dir", default=DEFAULT_OUTPUT_DIR)
     parser.add_argument("--no-download", action="store_true")
     parser.add_argument(
-        "--glyph-x-scale",
+        "--cjk-glyph-x-scale",
         type=float,
-        default=DEFAULT_GLYPH_X_SCALE,
-        help="Horizontal outline scale for every encoded NanumSquare glyph.",
+        default=DEFAULT_CJK_GLYPH_X_SCALE,
+        help="Horizontal outline scale for NanumSquare CJK glyphs.",
     )
     parser.add_argument(
-        "--spacing-scale",
+        "--cjk-spacing-scale",
         type=float,
-        default=DEFAULT_SPACING_SCALE,
-        help="Sidebearing scale for every encoded NanumSquare glyph.",
+        default=DEFAULT_CJK_SPACING_SCALE,
+        help="Sidebearing scale for NanumSquare CJK glyphs.",
     )
     parser.add_argument(
-        "--italic-angle",
+        "--latin-glyph-x-scale",
         type=float,
-        default=DEFAULT_ITALIC_ANGLE,
-        help="Synthetic slant angle for non-CJK glyphs in italic variants.",
+        default=DEFAULT_LATIN_GLYPH_X_SCALE,
+        help="Horizontal outline scale for Montserrat non-CJK glyphs.",
+    )
+    parser.add_argument(
+        "--latin-spacing-ratio",
+        type=float,
+        default=DEFAULT_LATIN_SPACING_RATIO,
+        help="Proportional multiplier for scaled Montserrat sidebearings and kerning.",
+    )
+    parser.add_argument(
+        "--latin-y-scale",
+        type=float,
+        default=DEFAULT_LATIN_Y_SCALE,
+        help="Vertical outline and anchor scale for Montserrat glyphs.",
+    )
+    parser.add_argument(
+        "--latin-y-shift",
+        type=float,
+        default=DEFAULT_LATIN_Y_SHIFT,
+        help="Vertical font-unit shift for Montserrat outlines and anchors.",
     )
     parser.add_argument(
         "--verbose-fontforge",
@@ -317,7 +307,6 @@ def build_parser() -> argparse.ArgumentParser:
         help="Show FontForge warnings emitted while opening and generating.",
     )
     return parser
-
 
 def selected_style_specs(style_names: list[str]) -> list[StyleSpec]:
     known = {spec.style: spec for spec in STYLE_SPECS}
@@ -329,11 +318,9 @@ def selected_style_specs(style_names: list[str]) -> list[StyleSpec]:
         raise SystemExit("Unknown styles: " + ", ".join(unknown))
     return [known[name] for name in style_names]
 
-
 def open_source_font(fontforge, path: Path, quiet: bool):
     with suppress_c_stderr(quiet):
         return fontforge.open(str(path))
-
 
 def flatten_cid_font(font, quiet: bool) -> bool:
     if not getattr(font, "cidfontname", None):
@@ -342,14 +329,12 @@ def flatten_cid_font(font, quiet: bool) -> bool:
         font.cidFlatten()
     return True
 
-
 def glyph_outline_width(font, codepoint: int) -> float:
     for glyph in font.glyphs():
         if glyph.unicode == codepoint:
             xmin, _, xmax, _ = glyph.boundingBox()
             return xmax - xmin
     return 0
-
 
 def derive_synthetic_weight_width_from_sources(
     fontforge, masters: dict[str, Path], quiet: bool
@@ -363,7 +348,6 @@ def derive_synthetic_weight_width_from_sources(
         finally:
             font.close()
     return derive_synthetic_weight_width(widths)
-
 
 def adjust_glyph(glyph, x_scale: float, spacing_scale: float) -> bool:
     xmin, _, xmax, _ = glyph.boundingBox()
@@ -387,59 +371,132 @@ def adjust_glyph(glyph, x_scale: float, spacing_scale: float) -> bool:
     glyph.width = metrics.advance_width
     return True
 
-
-def adjust_encoded_glyphs(font, x_scale: float, spacing_scale: float) -> int:
+def adjust_cjk_glyphs(font, x_scale: float, spacing_scale: float) -> int:
     changed = 0
     for glyph in list(font.glyphs()):
-        if glyph.unicode >= 0 and adjust_glyph(glyph, x_scale, spacing_scale):
+        if is_cjk_codepoint(glyph.unicode) and adjust_glyph(
+            glyph, x_scale, spacing_scale
+        ):
             changed += 1
     return changed
 
-
-def apply_synthetic_weight(font, style: str, offset_width: int, quiet: bool) -> int:
+def apply_synthetic_weight(font, offset_width: int, quiet: bool) -> int:
     if not offset_width:
         return 0
 
     changed = 0
     with suppress_c_stderr(quiet):
         for glyph in list(font.glyphs()):
-            if glyph.unicode >= 0:
-                glyph_offset_width = synthetic_weight_offset_for_codepoint(
-                    style, glyph.unicode, offset_width
-                )
-                if not glyph_offset_width:
-                    continue
-                if glyph.references:
-                    glyph.unlinkRef()
-                glyph.changeWeight(glyph_offset_width, "auto", 0, 0, "auto")
-                changed += 1
+            if not is_cjk_codepoint(glyph.unicode):
+                continue
+            if glyph.references:
+                glyph.unlinkRef()
+            glyph.changeWeight(offset_width, "auto", 0, 0, "auto")
+            changed += 1
     return changed
 
+def remove_layout_lookups(font) -> int:
+    lookup_names = list(font.gpos_lookups) + list(font.gsub_lookups)
+    for lookup_name in lookup_names:
+        font.removeLookup(lookup_name)
+    return len(lookup_names)
 
-def slant_non_cjk_glyphs(font, angle: float) -> tuple[int, int]:
-    slope = italic_slope(angle)
-    slanted = 0
-    upright = 0
-    for glyph in list(font.glyphs()):
-        codepoint = glyph.unicode
-        if not should_slant_codepoint(codepoint):
-            upright += 1
-            continue
-        if glyph.references:
-            glyph.unlinkRef()
-        glyph.transform((1, 0, slope, 1, 0, 0))
-        slanted += 1
-    return slanted, upright
-
-
-def remove_unencoded_glyphs(font) -> int:
+def remove_non_cjk_glyphs(font) -> int:
     removed = 0
     for glyph in list(font.glyphs()):
-        if glyph.unicode < 0 and glyph.glyphname != ".notdef":
+        keep = glyph.glyphname == ".notdef" or is_cjk_codepoint(glyph.unicode)
+        if not keep:
             font.removeGlyph(glyph)
             removed += 1
     return removed
 
+def montserrat_source_path(montserrat_dir: Path, italic: bool) -> Path:
+    filename = (
+        MONTSERRAT_ITALIC_FILENAME if italic else MONTSERRAT_UPRIGHT_FILENAME
+    )
+    path = montserrat_dir / filename
+    if not path.is_file():
+        raise SystemExit(
+            f"Missing Montserrat source: {path}; run make montserrat first."
+        )
+    return path
+
+def instantiate_montserrat(source_path: Path, output_path: Path, weight: int) -> None:
+    from fontTools.ttLib import TTFont
+    from fontTools.varLib.instancer import instantiateVariableFont
+
+    font = TTFont(source_path)
+    instantiateVariableFont(font, {"wght": weight}, inplace=True)
+    font["OS/2"].usWeightClass = weight
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    font.save(output_path)
+    font.close()
+
+def remove_cjk_from_latin(font) -> int:
+    removed = 0
+    for glyph in list(font.glyphs()):
+        if is_cjk_codepoint(glyph.unicode):
+            font.removeGlyph(glyph)
+            removed += 1
+    return removed
+
+def adjust_latin_glyph(
+    glyph,
+    *,
+    x_scale: float,
+    spacing_scale: float,
+    y_scale: float,
+    y_shift: float,
+) -> None:
+    original_width = glyph.width
+    xmin, _, xmax, _ = glyph.boundingBox()
+    left_side_bearing = glyph.left_side_bearing
+    right_side_bearing = glyph.right_side_bearing
+
+    if glyph.references:
+        glyph.unlinkRef()
+    glyph.transform((x_scale, 0, 0, y_scale, 0, y_shift))
+
+    if original_width == 0:
+        glyph.width = 0
+        return
+    if xmax <= xmin:
+        glyph.width = round(original_width * spacing_scale)
+        return
+
+    metrics = adjusted_glyph_metrics(
+        xmin=xmin,
+        xmax=xmax,
+        left_side_bearing=left_side_bearing,
+        right_side_bearing=right_side_bearing,
+        x_scale=x_scale,
+        spacing_scale=spacing_scale,
+    )
+    glyph.left_side_bearing = round(metrics.left_side_bearing)
+    glyph.width = metrics.advance_width
+
+def transform_latin_font(
+    font,
+    *,
+    x_scale: float,
+    spacing_ratio: float,
+    y_scale: float,
+    y_shift: float,
+) -> tuple[int, int]:
+    font.reencode("unicode")
+    removed_cjk = remove_cjk_from_latin(font)
+    spacing_scale = x_scale * spacing_ratio
+    changed = 0
+    for glyph in list(font.glyphs()):
+        adjust_latin_glyph(
+            glyph,
+            x_scale=x_scale,
+            spacing_scale=spacing_scale,
+            y_scale=y_scale,
+            y_shift=y_shift,
+        )
+        changed += 1
+    return changed, removed_cjk
 
 def rewrite_metadata(font, spec: StyleSpec, italic: bool, italic_angle: float) -> None:
     output_style = style_name(spec.style, italic)
@@ -451,7 +508,7 @@ def rewrite_metadata(font, spec: StyleSpec, italic: bool, italic_angle: float) -
     font.fontname = ps_name
     font.weight = "Normal" if spec.style == "Regular" else spec.style
     font.version = VERSION
-    font.copyright = "SNU Edge Sans is a derivative build from NanumSquare."
+    font.copyright = "SNU Edge is a derivative build from NanumSquare and Montserrat."
     font.italicangle = italic_angle if italic else 0
     font.os2_weight = spec.weight
     font.os2_width = 5
@@ -464,7 +521,7 @@ def rewrite_metadata(font, spec: StyleSpec, italic: bool, italic_angle: float) -
         (
             "English (US)",
             "Copyright",
-            "SNU Edge Sans is a derivative build from NanumSquare.",
+            "SNU Edge is a derivative build from NanumSquare and Montserrat.",
         ),
         ("English (US)", "Family", FAMILY_NAME),
         ("English (US)", "SubFamily", output_style),
@@ -475,7 +532,7 @@ def rewrite_metadata(font, spec: StyleSpec, italic: bool, italic_angle: float) -
         (
             "English (US)",
             "Trademark",
-            "NanumSquare names belong to their respective owners.",
+            "NanumSquare and Montserrat names belong to their respective owners.",
         ),
         (
             "English (US)",
@@ -487,58 +544,106 @@ def rewrite_metadata(font, spec: StyleSpec, italic: bool, italic_angle: float) -
         ("English (US)", "Compatible Full", full_name),
     )
 
-
 def output_path_for(output_dir: Path, spec: StyleSpec, italic: bool) -> Path:
     return output_dir / (
         f"{POSTSCRIPT_FAMILY_NAME}-{postscript_style_name(spec.style, italic)}.otf"
     )
 
+def build_variant(
+    fontforge,
+    args,
+    masters: dict[str, Path],
+    spec: StyleSpec,
+    italic: bool,
+) -> Path:
+    from finalize_snu_edge import finalize_font
 
-def build_variant(fontforge, args, masters: dict[str, Path], spec: StyleSpec, italic: bool) -> Path:
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-
+    output_path = output_path_for(output_dir, spec, italic)
     quiet = not args.verbose_fontforge
-    font = open_source_font(fontforge, masters[spec.source_label], quiet)
 
-    try:
-        flattened = flatten_cid_font(font, quiet)
-        synthetic_offset_width = spec.synthetic_weight_steps * args.synthetic_weight_width
-        synthetic_changed = apply_synthetic_weight(
-            font,
-            spec.style,
-            synthetic_offset_width,
-            quiet,
-        )
-        adjusted = adjust_encoded_glyphs(
-            font,
-            x_scale=args.glyph_x_scale,
-            spacing_scale=args.spacing_scale,
-        )
-        slanted, upright = slant_non_cjk_glyphs(font, args.italic_angle) if italic else (0, 0)
-        removed_unencoded = remove_unencoded_glyphs(font)
-        italic_angle = -args.italic_angle if italic else 0
-        rewrite_metadata(font, spec, italic, italic_angle)
+    with tempfile.TemporaryDirectory(prefix="snu-edge-build-") as temporary:
+        temporary_dir = Path(temporary)
+        instance_path = temporary_dir / "montserrat-instance.ttf"
+        transformed_latin_path = temporary_dir / "montserrat-transformed.otf"
+        raw_output_path = temporary_dir / output_path.name
 
-        output_path = output_path_for(output_dir, spec, italic)
-        with suppress_c_stderr(quiet):
-            validation_state = font.validate()
-        with suppress_c_stderr(quiet):
-            font.generate(str(output_path))
-        print(
-            f"{output_path}: glyphs_adjusted={adjusted}, "
-            f"synthetic_weighted={synthetic_changed}, "
-            f"synthetic_offset_width={synthetic_offset_width}, "
-            f"unencoded_removed={removed_unencoded}, "
-            f"italic_slanted={slanted}, italic_upright={upright}, "
-            f"glyph_x_scale={args.glyph_x_scale:.4f}, "
-            f"spacing_scale={args.spacing_scale:.4f}, "
-            f"cid_flattened={flattened}, validate=0x{validation_state:x}"
-        )
-        return output_path
-    finally:
-        font.close()
+        source_path = montserrat_source_path(Path(args.montserrat_dir), italic)
+        instantiate_montserrat(source_path, instance_path, spec.latin_weight)
+        latin = open_source_font(fontforge, instance_path, quiet)
+        try:
+            latin_adjusted, latin_cjk_removed = transform_latin_font(
+                latin,
+                x_scale=args.latin_glyph_x_scale,
+                spacing_ratio=args.latin_spacing_ratio,
+                y_scale=args.latin_y_scale,
+                y_shift=args.latin_y_shift,
+            )
+            italic_angle = latin.italicangle if italic else 0
+            with suppress_c_stderr(quiet):
+                latin.generate(str(transformed_latin_path))
+        finally:
+            latin.close()
 
+        font = open_source_font(fontforge, masters[spec.source_label], quiet)
+        try:
+            flattened = flatten_cid_font(font, quiet)
+            font.reencode("unicode")
+            removed_lookups = remove_layout_lookups(font)
+            synthetic_offset_width = (
+                spec.synthetic_weight_steps * args.synthetic_weight_width
+            )
+            synthetic_changed = apply_synthetic_weight(
+                font,
+                synthetic_offset_width,
+                quiet,
+            )
+            cjk_adjusted = adjust_cjk_glyphs(
+                font,
+                x_scale=args.cjk_glyph_x_scale,
+                spacing_scale=args.cjk_spacing_scale,
+            )
+            nanum_removed = remove_non_cjk_glyphs(font)
+            with suppress_c_stderr(quiet):
+                font.mergeFonts(str(transformed_latin_path))
+            rewrite_metadata(font, spec, italic, italic_angle)
+
+            with suppress_c_stderr(quiet):
+                validation_state = font.validate()
+            with suppress_c_stderr(quiet):
+                font.generate(str(raw_output_path))
+        finally:
+            font.close()
+
+        kern_scale = args.latin_glyph_x_scale * args.latin_spacing_ratio
+        kern_lookups, kern_values, legacy_pairs, guard_stats = finalize_font(
+            raw_output_path,
+            output_path,
+            italic=italic,
+            kern_scale=kern_scale,
+        )
+
+    guard_summary = "none"
+    if guard_stats is not None:
+        guard_summary = f"{guard_stats.guard_min}..{guard_stats.guard_max}"
+    print(
+        f"{output_path}: cjk_adjusted={cjk_adjusted}, "
+        f"synthetic_weighted={synthetic_changed}, "
+        f"synthetic_offset_width={synthetic_offset_width}, "
+        f"nanum_non_cjk_removed={nanum_removed}, "
+        f"nanum_layout_lookups_removed={removed_lookups}, "
+        f"latin_adjusted={latin_adjusted}, latin_cjk_removed={latin_cjk_removed}, "
+        f"latin_weight={spec.latin_weight}, "
+        f"latin_x_scale={args.latin_glyph_x_scale:.4f}, "
+        f"latin_spacing_ratio={args.latin_spacing_ratio:.4f}, "
+        f"latin_y_scale={args.latin_y_scale:.4f}, "
+        f"latin_y_shift={args.latin_y_shift:.1f}, "
+        f"kern_lookups={kern_lookups}, kern_values_scaled={kern_values}, "
+        f"legacy_pairs_scaled={legacy_pairs}, italic_guard={guard_summary}, "
+        f"cid_flattened={flattened}, validate=0x{validation_state:x}"
+    )
+    return output_path
 
 def main() -> None:
     parser = build_parser()
@@ -549,7 +654,7 @@ def main() -> None:
     except ModuleNotFoundError as exc:
         raise SystemExit(
             "Run this script with FontForge: "
-            "fontforge -lang=py -script scripts/build_snu_edge_sans.py"
+            "fontforge -lang=py -script scripts/build_snu_edge.py"
         ) from exc
 
     masters = ensure_source_fonts(args)
@@ -571,7 +676,6 @@ def main() -> None:
             built_paths.append(build_variant(fontforge, args, masters, spec, italic=True))
 
     print(f"Built {len(built_paths)} font(s).")
-
 
 if __name__ == "__main__":
     main()

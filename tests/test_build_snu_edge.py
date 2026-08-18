@@ -4,27 +4,32 @@ import unittest
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-SCRIPT_PATH = ROOT / "scripts" / "build_snu_edge_sans.py"
+SCRIPT_PATH = ROOT / "scripts" / "build_snu_edge.py"
 
 
 def load_builder():
-    spec = importlib.util.spec_from_file_location("build_snu_edge_sans", SCRIPT_PATH)
+    spec = importlib.util.spec_from_file_location("build_snu_edge", SCRIPT_PATH)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
 
 
-class BuildSnuEdgeSansTests(unittest.TestCase):
+class BuildSnuEdgeTests(unittest.TestCase):
     def test_download_url_and_defaults_match_project_contract(self):
         builder = load_builder()
 
+        self.assertEqual(builder.FAMILY_NAME, "SNU Edge")
+        self.assertEqual(builder.POSTSCRIPT_FAMILY_NAME, "SNUEdge")
         self.assertEqual(
             builder.DEFAULT_SOURCE_ZIP_URL,
             "https://campaign.naver.com/nanumsquare_neo/download/NaverNanumSquare.zip",
         )
-        self.assertEqual(builder.DEFAULT_GLYPH_X_SCALE, 0.96)
-        self.assertEqual(builder.DEFAULT_SPACING_SCALE, 0.86)
-        self.assertEqual(builder.DEFAULT_ITALIC_ANGLE, 10.0)
+        self.assertEqual(builder.DEFAULT_CJK_GLYPH_X_SCALE, 0.96)
+        self.assertEqual(builder.DEFAULT_CJK_SPACING_SCALE, 0.86)
+        self.assertEqual(builder.DEFAULT_LATIN_GLYPH_X_SCALE, 0.86)
+        self.assertEqual(builder.DEFAULT_LATIN_SPACING_RATIO, 0.90)
+        self.assertEqual(builder.DEFAULT_LATIN_Y_SCALE, 1.028)
+        self.assertEqual(builder.DEFAULT_LATIN_Y_SHIFT, -26)
 
     def test_style_matrix_uses_nanumsquare_masters_and_synthetic_steps(self):
         builder = load_builder()
@@ -46,6 +51,10 @@ class BuildSnuEdgeSansTests(unittest.TestCase):
         self.assertEqual(specs["ExtraBlack"].source_label, "ExtraBold")
         self.assertEqual(specs["Black"].source_label, "ExtraBold")
         self.assertEqual(specs["Black"].synthetic_weight_steps, 1)
+        self.assertEqual(
+            [spec.latin_weight for spec in specs.values()],
+            [285, 355, 420, 475, 535, 585, 645, 690],
+        )
 
     def test_master_classifier_supports_legacy_and_neo_filenames(self):
         builder = load_builder()
@@ -125,8 +134,8 @@ class BuildSnuEdgeSansTests(unittest.TestCase):
             xmax=893,
             left_side_bearing=62,
             right_side_bearing=17,
-            x_scale=builder.DEFAULT_GLYPH_X_SCALE,
-            spacing_scale=builder.DEFAULT_SPACING_SCALE,
+            x_scale=builder.DEFAULT_CJK_GLYPH_X_SCALE,
+            spacing_scale=builder.DEFAULT_CJK_SPACING_SCALE,
         )
 
         self.assertEqual(metrics.advance_width, 866)
@@ -135,30 +144,31 @@ class BuildSnuEdgeSansTests(unittest.TestCase):
         self.assertAlmostEqual(metrics.outline_width, 797.76)
         self.assertEqual(builder.derive_synthetic_weight_width([44, 70, 99, 128]), 14)
 
-    def test_light_lowercase_e_caps_synthetic_weight_to_preserve_counter_shape(self):
+    def test_latin_spacing_scales_with_transformed_width(self):
         builder = load_builder()
 
-        self.assertEqual(
-            builder.synthetic_weight_offset_for_codepoint("Light", ord("e"), 14),
-            10,
-        )
-        self.assertEqual(
-            builder.synthetic_weight_offset_for_codepoint("Light", ord("a"), 14),
-            14,
-        )
-        self.assertEqual(
-            builder.synthetic_weight_offset_for_codepoint("Medium", ord("e"), 14),
-            14,
+        metrics = builder.adjusted_glyph_metrics(
+            xmin=50,
+            xmax=650,
+            left_side_bearing=50,
+            right_side_bearing=50,
+            x_scale=builder.DEFAULT_LATIN_GLYPH_X_SCALE,
+            spacing_scale=(
+                builder.DEFAULT_LATIN_GLYPH_X_SCALE
+                * builder.DEFAULT_LATIN_SPACING_RATIO
+            ),
         )
 
-    def test_italic_slants_non_cjk_and_keeps_cjk_upright(self):
+        self.assertEqual(metrics.advance_width, 593)
+        self.assertAlmostEqual(metrics.left_side_bearing, 38.7)
+        self.assertAlmostEqual(metrics.right_side_bearing, 38.7)
+
+    def test_obsolete_nanum_latin_exceptions_are_removed(self):
         builder = load_builder()
 
-        self.assertTrue(builder.should_slant_codepoint(ord("A")))
-        self.assertTrue(builder.should_slant_codepoint(ord("Ω")))
-        self.assertFalse(builder.should_slant_codepoint(0xAC00))
-        self.assertFalse(builder.should_slant_codepoint(0xFF21))
-        self.assertAlmostEqual(builder.italic_slope(), 0.1763269807)
+        self.assertFalse(hasattr(builder, "SYNTHETIC_WEIGHT_CODEPOINT_CAPS"))
+        self.assertFalse(hasattr(builder, "synthetic_weight_offset_for_codepoint"))
+        self.assertFalse(hasattr(builder, "slant_non_cjk_glyphs"))
 
 
 if __name__ == "__main__":

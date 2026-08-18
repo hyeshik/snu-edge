@@ -24,7 +24,7 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y fontforge make python3 unzip zip
+          sudo apt-get install -y fontforge make python3 python3-fonttools unzip zip
 
       - name: Run unit tests
         run: make test
@@ -34,15 +34,15 @@ jobs:
 
       - name: Verify package
         run: |
-          test "$(find instance_otf -maxdepth 1 -name 'SNUEdgeSans-*.otf' | wc -l)" -eq 16
-          test -f dist/SNUEdgeSans.zip
-          unzip -l dist/SNUEdgeSans.zip
+          test "$(find instance_otf -maxdepth 1 -name 'SNUEdge-*.otf' | wc -l)" -eq 16
+          test -f dist/SNUEdge.zip
+          unzip -l dist/SNUEdge.zip
 
       - name: Upload package artifact
         uses: actions/upload-artifact@v4
         with:
-          name: SNUEdgeSans-${{ github.sha }}
-          path: dist/SNUEdgeSans.zip
+          name: SNUEdge-${{ github.sha }}
+          path: dist/SNUEdge.zip
           if-no-files-found: error
           retention-days: 30
 
@@ -59,7 +59,7 @@ jobs:
       - name: Download package artifact
         uses: actions/download-artifact@v4
         with:
-          name: SNUEdgeSans-${{ github.sha }}
+          name: SNUEdge-${{ github.sha }}
           path: dist
 
       - name: Publish release
@@ -67,7 +67,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "${GITHUB_REF_NAME}" \
-            dist/SNUEdgeSans.zip \
-            --title "SNU Edge Sans ${GITHUB_REF_NAME}" \
+            dist/SNUEdge.zip \
+            --title "SNU Edge ${GITHUB_REF_NAME}" \
             --generate-notes \
             --verify-tag
