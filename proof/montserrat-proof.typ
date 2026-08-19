@@ -25,65 +25,66 @@
     ),
   ),
   (
-    name: "Light", edge-weight: 300, chosen: 355,
+    name: "Light", edge-weight: 300, chosen: 367,
     candidates: (
       (weight: 355, reason: "ink / round"),
       (weight: 361, reason: "H stem @ 86%"),
+      (weight: 367, reason: "40% density correction"),
       (weight: 390, reason: "stem-text high"),
     ),
   ),
   (
-    name: "Regular", edge-weight: 400, chosen: 420,
+    name: "Regular", edge-weight: 400, chosen: 434,
     candidates: (
-      (weight: 415, reason: "overall ink"),
       (weight: 419, reason: "H stem @ 86%"),
       (weight: 420, reason: "round density"),
+      (weight: 434, reason: "40% density correction"),
       (weight: 455, reason: "stem-text high"),
     ),
   ),
   (
-    name: "Medium", edge-weight: 500, chosen: 475,
+    name: "Medium", edge-weight: 500, chosen: 495,
     candidates: (
-      (weight: 465, reason: "overall ink"),
       (weight: 475, reason: "round density"),
       (weight: 478, reason: "H stem @ 86%"),
+      (weight: 495, reason: "40% density correction"),
       (weight: 510, reason: "stem-text high"),
     ),
   ),
   (
-    name: "SemiBold", edge-weight: 600, chosen: 535,
+    name: "SemiBold", edge-weight: 600, chosen: 545,
     candidates: (
-      (weight: 525, reason: "overall ink"),
       (weight: 535, reason: "round density"),
       (weight: 537, reason: "H stem @ 86%"),
+      (weight: 545, reason: "40% density correction"),
       (weight: 565, reason: "stem-text high"),
     ),
   ),
   (
-    name: "Bold", edge-weight: 700, chosen: 585,
+    name: "Bold", edge-weight: 700, chosen: 603,
     candidates: (
       (weight: 570, reason: "overall ink"),
       (weight: 585, reason: "round density"),
       (weight: 588, reason: "H stem @ 86%"),
-      (weight: 605, reason: "stem-text high"),
+      (weight: 603, reason: "40% density correction"),
     ),
   ),
   (
-    name: "ExtraBold", edge-weight: 800, chosen: 645,
+    name: "ExtraBold", edge-weight: 800, chosen: 652,
     candidates: (
-      (weight: 625, reason: "overall ink"),
       (weight: 640, reason: "H stem @ 86%"),
       (weight: 645, reason: "round density"),
+      (weight: 652, reason: "40% density correction"),
       (weight: 660, reason: "stem-text high"),
     ),
   ),
   (
-    name: "Black", edge-weight: 900, chosen: 690,
+    name: "Black", edge-weight: 900, chosen: 711,
     candidates: (
-      (weight: 665, reason: "overall ink"),
       (weight: 688, reason: "H stem @ 86%"),
       (weight: 690, reason: "round density"),
       (weight: 695, reason: "stem-text high"),
+      (weight: 711, reason: "40% density correction"),
     ),
   ),
 )
@@ -371,7 +372,7 @@
 #proof-title(
   "00 · GUIDE",
   "How to read this proof",
-  note: "The selected round-density mapping is used downstream; alternative candidates remain visible for reference.",
+  note: "The selected 40% long-text density correction is used downstream; local stroke candidates remain visible for reference.",
 )
 #grid(
   columns: (1fr, 1fr),
@@ -436,7 +437,7 @@
   #proof-title(
     "02 · WIDTH × TRACKING",
     style.name + " · Montserrat wght " + str(style.chosen),
-    note: "Selected round-density match. Compare line length, counter shape, and spacing rhythm. The raw 100% control is shown above the matrix.",
+    note: "Selected 40% density correction. Compare line length, counter shape, and spacing rhythm. The raw 100% control is shown above the matrix.",
   )
   #grid(
     columns: (29mm, 1fr, 1fr),

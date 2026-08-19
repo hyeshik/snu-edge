@@ -8,7 +8,7 @@ OUTPUT_DIR ?= instance_otf
 MONTSERRAT_DIR ?= vendor/montserrat
 V1_REFERENCE_DIR ?= proof/generated/v1_otf
 BUILD_FLAGS ?=
-PACKAGE_VERSION ?= 0.3.1
+PACKAGE_VERSION ?= 0.3.2
 PACKAGE_NAME ?= SNUEdge-$(PACKAGE_VERSION)
 PACKAGE_DIR ?= dist/$(PACKAGE_NAME)
 PACKAGE_ZIP ?= dist/$(PACKAGE_NAME).zip
@@ -19,8 +19,12 @@ LONG_PROOF_PDF ?= proof/SNUEdge-Montserrat-LongText-Proof.pdf
 SPACING_AUDIT ?= proof/generated/montserrat-spacing-audit.json
 H_WEIGHT_AUDIT ?= proof/generated/h-stroke-weight-audit.json
 H_WEIGHT_IMAGE_PREFIX ?= proof/generated/h-stroke-weight-audit
+MIXED_SCRIPT_AUDIT ?= proof/generated/mixed-script-color-audit.json
+MIXED_SCRIPT_REPORT ?= proof/generated/mixed-script-color-audit.md
+MIXED_SCRIPT_CHART ?= proof/generated/mixed-script-color-audit.png
+APPENDARD_DIR ?= ../snu-appendard/dist/otf
 
-.PHONY: build montserrat v1-reference test verify package spacing-audit weight-audit proof long-proof clean
+.PHONY: build montserrat v1-reference test verify package spacing-audit weight-audit mixed-script-audit proof long-proof clean
 
 build: montserrat
 	$(FONTFORGE) -lang=py -script scripts/build_snu_edge.py \
@@ -63,6 +67,14 @@ weight-audit: v1-reference montserrat
 		--output "$(H_WEIGHT_AUDIT)" \
 		--image-prefix "$(H_WEIGHT_IMAGE_PREFIX)"
 
+mixed-script-audit:
+	$(PYTHON) scripts/audit_mixed_script_color.py \
+		--edge-dir "$(OUTPUT_DIR)" \
+		--control-dir "$(APPENDARD_DIR)" \
+		--output "$(MIXED_SCRIPT_AUDIT)" \
+		--markdown "$(MIXED_SCRIPT_REPORT)" \
+		--chart "$(MIXED_SCRIPT_CHART)"
+
 proof: build spacing-audit weight-audit
 	mkdir -p "$(dir $(PROOF_PDF))"
 	$(TYPST) compile \
@@ -96,3 +108,6 @@ clean:
 	rm -f "$(SPACING_AUDIT)"
 	rm -f "$(H_WEIGHT_AUDIT)"
 	rm -f "$(H_WEIGHT_IMAGE_PREFIX)"-*.png
+	rm -f "$(MIXED_SCRIPT_AUDIT)"
+	rm -f "$(MIXED_SCRIPT_REPORT)"
+	rm -f "$(MIXED_SCRIPT_CHART)"

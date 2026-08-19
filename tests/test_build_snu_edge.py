@@ -20,7 +20,7 @@ class BuildSnuEdgeTests(unittest.TestCase):
 
         self.assertEqual(builder.FAMILY_NAME, "SNU Edge")
         self.assertEqual(builder.POSTSCRIPT_FAMILY_NAME, "SNUEdge")
-        self.assertEqual(builder.VERSION, "0.301")
+        self.assertEqual(builder.VERSION, "0.302")
         self.assertEqual(
             builder.DEFAULT_SOURCE_ZIP_URL,
             "https://campaign.naver.com/nanumsquare_neo/download/NaverNanumSquare.zip",
@@ -54,7 +54,7 @@ class BuildSnuEdgeTests(unittest.TestCase):
         self.assertEqual(specs["Black"].synthetic_weight_steps, 1)
         self.assertEqual(
             [spec.latin_weight for spec in specs.values()],
-            [285, 355, 420, 475, 535, 585, 645, 690],
+            [285, 367, 434, 495, 545, 603, 652, 711],
         )
 
     def test_master_classifier_supports_legacy_and_neo_filenames(self):

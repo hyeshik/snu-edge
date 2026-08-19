@@ -64,7 +64,7 @@ Build the current SNU Edge family and compile the Typst proof:
 make proof
 ```
 
-Build the long-form proof using the selected round-density weights, New B
+Build the long-form proof using the selected 40% density-correction weights, New B
 vertical geometry, and proportional `q 0.90` spacing:
 
 ```sh
@@ -146,6 +146,31 @@ scaled by `0.86 * 0.90 = 0.774`. The original Montserrat GPOS/GSUB tables and
 transformed mark anchors are retained, so ligatures, combining-mark attachment,
 and native pair kerning remain available in the packaged OTFs.
 
+### Mixed-script Color Audit
+
+Compare Korean and Latin ink density and horizontal whitespace against the
+SNU Appendard control family with:
+
+```sh
+make mixed-script-audit
+```
+
+The audit shapes the labelled Korean and Latin runs from the eight-paragraph
+long-text proof, rasterizes them without hinting at 512 ppem, and writes a JSON
+report, a readable summary, and a comparison chart to:
+
+```text
+proof/generated/mixed-script-color-audit.json
+proof/generated/mixed-script-color-audit.md
+proof/generated/mixed-script-color-audit.png
+```
+
+Ink density is integrated alpha coverage per advance-width em square.
+Horizontal whitespace is the share of each run's advance outside glyph ink
+bounding boxes, including real word spaces but excluding counters inside a
+glyph. The default control directory is `../snu-appendard/dist/otf`; override it
+with `make mixed-script-audit APPENDARD_DIR=path/to/otf`.
+
 ### Italic Latin-to-Hangul Guard
 
 Every italic build automatically appends a non-breaking optical guard for a
@@ -175,13 +200,13 @@ The default build creates upright and italic variants with these CJK and Latin
 weight sources:
 
 - Thin: NanumSquare Light; Montserrat 285
-- Light: NanumSquare Light plus one CJK synthetic step; Montserrat 355
-- Regular: NanumSquare Regular; Montserrat 420
-- Medium: NanumSquare Regular plus one CJK synthetic step; Montserrat 475
-- SemiBold: NanumSquare Bold; Montserrat 535
-- Bold: NanumSquare Bold plus one CJK synthetic step; Montserrat 585
-- ExtraBold: NanumSquare ExtraBold; Montserrat 645
-- Black: NanumSquare ExtraBold plus one CJK synthetic step; Montserrat 690
+- Light: NanumSquare Light plus one CJK synthetic step; Montserrat 367
+- Regular: NanumSquare Regular; Montserrat 434
+- Medium: NanumSquare Regular plus one CJK synthetic step; Montserrat 495
+- SemiBold: NanumSquare Bold; Montserrat 545
+- Bold: NanumSquare Bold plus one CJK synthetic step; Montserrat 603
+- ExtraBold: NanumSquare ExtraBold; Montserrat 652
+- Black: NanumSquare ExtraBold plus one CJK synthetic step; Montserrat 711
 
 This produces 16 OTF files in total.
 
@@ -248,16 +273,16 @@ make package SOURCE_DIR=path/to/NanumSquare/fonts BUILD_FLAGS=--no-download
 The repository includes a GitHub Actions workflow at
 `.github/workflows/build-package.yml`. It runs on pushes, pull requests, tag
 pushes matching `v*`, and manual dispatches. The workflow installs FontForge,
-runs the unit tests, builds all 16 OTF files, creates `dist/SNUEdge-0.3.1.zip`,
+runs the unit tests, builds all 16 OTF files, creates `dist/SNUEdge-0.3.2.zip`,
 verifies the package, and uploads it as a workflow artifact. When the workflow
 is triggered by a tag matching `v*`, it also publishes a GitHub Release and
-attaches `SNUEdge-0.3.1.zip` as a release asset.
+attaches `SNUEdge-0.3.2.zip` as a release asset.
 
 Create and push a release tag:
 
 ```sh
-git tag v0.3.1
-git push origin v0.3.1
+git tag v0.3.2
+git push origin v0.3.2
 ```
 
 Reusing an existing release tag is intentionally treated as an error. Use a new

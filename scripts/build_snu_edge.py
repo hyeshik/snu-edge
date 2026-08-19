@@ -12,7 +12,7 @@ from typing import Iterable, Iterator, NamedTuple
 
 FAMILY_NAME = "SNU Edge"
 POSTSCRIPT_FAMILY_NAME = "SNUEdge"
-VERSION = "0.301"
+VERSION = "0.302"
 DEFAULT_SOURCE_ZIP_URL = (
     "https://campaign.naver.com/nanumsquare_neo/download/NaverNanumSquare.zip"
 )
@@ -47,13 +47,13 @@ class AdjustedMetrics(NamedTuple):
 
 STYLE_SPECS = (
     StyleSpec("Thin", 100, "Light", 285),
-    StyleSpec("Light", 300, "Light", 355, 1),
-    StyleSpec("Regular", 400, "Regular", 420),
-    StyleSpec("Medium", 500, "Regular", 475, 1),
-    StyleSpec("SemiBold", 600, "Bold", 535),
-    StyleSpec("Bold", 700, "Bold", 585, 1),
-    StyleSpec("ExtraBold", 800, "ExtraBold", 645),
-    StyleSpec("Black", 900, "ExtraBold", 690, 1),
+    StyleSpec("Light", 300, "Light", 367, 1),
+    StyleSpec("Regular", 400, "Regular", 434),
+    StyleSpec("Medium", 500, "Regular", 495, 1),
+    StyleSpec("SemiBold", 600, "Bold", 545),
+    StyleSpec("Bold", 700, "Bold", 603, 1),
+    StyleSpec("ExtraBold", 800, "ExtraBold", 652),
+    StyleSpec("Black", 900, "ExtraBold", 711, 1),
 )
 
 CJK_CODEPOINT_RANGES = (

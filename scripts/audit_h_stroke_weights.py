@@ -15,13 +15,13 @@ from PIL import Image, ImageDraw
 
 STYLES = (
     ("Thin", 100, 285),
-    ("Light", 300, 355),
-    ("Regular", 400, 420),
-    ("Medium", 500, 475),
-    ("SemiBold", 600, 535),
-    ("Bold", 700, 585),
-    ("ExtraBold", 800, 645),
-    ("Black", 900, 690),
+    ("Light", 300, 367),
+    ("Regular", 400, 434),
+    ("Medium", 500, 495),
+    ("SemiBold", 600, 545),
+    ("Bold", 700, 603),
+    ("ExtraBold", 800, 652),
+    ("Black", 900, 711),
 )
 WIDTH_SCALE = 0.86
 CHARACTER = "H"

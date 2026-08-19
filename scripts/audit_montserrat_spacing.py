@@ -17,13 +17,13 @@ from fontTools.ttLib import TTFont
 
 STYLES = (
     ("Thin", 285),
-    ("Light", 355),
-    ("Regular", 420),
-    ("Medium", 475),
-    ("SemiBold", 535),
-    ("Bold", 585),
-    ("ExtraBold", 645),
-    ("Black", 690),
+    ("Light", 367),
+    ("Regular", 434),
+    ("Medium", 495),
+    ("SemiBold", 545),
+    ("Bold", 603),
+    ("ExtraBold", 652),
+    ("Black", 711),
 )
 
 LOWER = "abcdefghijklmnopqrstuvwxyz"
