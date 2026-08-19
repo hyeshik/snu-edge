@@ -11,6 +11,26 @@ from add_italic_cjk_guard import GuardStats, append_guard_lookup
 
 DEFAULT_KERN_SCALE = 0.86 * 0.90
 HORIZONTAL_VALUE_FIELDS = ("XPlacement", "XAdvance")
+FIGURE_NAMES = (
+    "zero",
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "six",
+    "seven",
+    "eight",
+    "nine",
+)
+FIGURE_SWAP_PAIRS = tuple((name, f"{name}.tf") for name in FIGURE_NAMES) + tuple(
+    (f"{name}.osf", f"{name}.tosf") for name in FIGURE_NAMES
+)
+FIGURE_SWAP_MAP = {
+    name: replacement
+    for first, second in FIGURE_SWAP_PAIRS
+    for name, replacement in ((first, second), (second, first))
+}
 
 
 def scale_value_record(value, factor: float) -> int:
@@ -38,6 +58,145 @@ def pair_position_subtables(lookup):
     for extension in lookup.SubTable:
         if extension.ExtensionLookupType == 2:
             yield extension.ExtSubTable
+
+
+def swap_figure_outlines_and_metrics(font: TTFont) -> None:
+    if "CFF " not in font:
+        raise ValueError("The merged font has no CFF outlines.")
+
+    char_strings = font["CFF "].cff.topDictIndex[0].CharStrings
+    metrics = font["hmtx"].metrics
+    missing = [
+        name
+        for pair in FIGURE_SWAP_PAIRS
+        for name in pair
+        if name not in char_strings.charStrings or name not in metrics
+    ]
+    if missing:
+        raise ValueError("Missing Montserrat figure glyphs: " + ", ".join(missing))
+
+    for tabular_name, proportional_name in FIGURE_SWAP_PAIRS:
+        if char_strings.charStringsAreIndexed:
+            tabular_index = char_strings.charStrings[tabular_name]
+            proportional_index = char_strings.charStrings[proportional_name]
+            tabular_char_string = char_strings[tabular_name]
+            proportional_char_string = char_strings[proportional_name]
+            char_strings.charStringsIndex.items[tabular_index] = (
+                proportional_char_string
+            )
+            char_strings.charStringsIndex.items[proportional_index] = (
+                tabular_char_string
+            )
+        else:
+            (
+                char_strings.charStrings[tabular_name],
+                char_strings.charStrings[proportional_name],
+            ) = (
+                char_strings.charStrings[proportional_name],
+                char_strings.charStrings[tabular_name],
+            )
+        metrics[tabular_name], metrics[proportional_name] = (
+            metrics[proportional_name],
+            metrics[tabular_name],
+        )
+
+
+def swap_numeric_spacing_features(font: TTFont) -> None:
+    if "GSUB" not in font:
+        raise ValueError("The merged font has no GSUB table.")
+
+    feature_records = font["GSUB"].table.FeatureList.FeatureRecord
+    proportional = [record for record in feature_records if record.FeatureTag == "pnum"]
+    tabular = [record for record in feature_records if record.FeatureTag == "tnum"]
+    if len(proportional) != 1 or len(tabular) != 1:
+        raise ValueError("Expected exactly one pnum and one tnum feature.")
+
+    proportional[0].Feature, tabular[0].Feature = (
+        tabular[0].Feature,
+        proportional[0].Feature,
+    )
+
+
+def remap_coverage(coverage, glyph_map: dict[str, str], glyph_ids: dict[str, int]) -> None:
+    coverage.glyphs = sorted(
+        (glyph_map.get(name, name) for name in coverage.glyphs),
+        key=glyph_ids.__getitem__,
+    )
+
+
+def remap_class_definition(class_definition, glyph_map: dict[str, str]) -> None:
+    class_definition.classDefs = {
+        glyph_map.get(name, name): class_id
+        for name, class_id in class_definition.classDefs.items()
+    }
+
+
+def remap_pair_position_subtable(
+    subtable,
+    glyph_map: dict[str, str],
+    glyph_ids: dict[str, int],
+) -> None:
+    if subtable.Format == 1:
+        pairs = []
+        for first_glyph, pair_set in zip(
+            subtable.Coverage.glyphs, subtable.PairSet
+        ):
+            for record in pair_set.PairValueRecord:
+                record.SecondGlyph = glyph_map.get(
+                    record.SecondGlyph, record.SecondGlyph
+                )
+            pair_set.PairValueRecord.sort(
+                key=lambda record: glyph_ids[record.SecondGlyph]
+            )
+            pair_set.PairValueCount = len(pair_set.PairValueRecord)
+            pairs.append((glyph_map.get(first_glyph, first_glyph), pair_set))
+        pairs.sort(key=lambda item: glyph_ids[item[0]])
+        subtable.Coverage.glyphs = [name for name, _ in pairs]
+        subtable.PairSet = [pair_set for _, pair_set in pairs]
+        subtable.PairSetCount = len(subtable.PairSet)
+        return
+
+    if subtable.Format == 2:
+        remap_coverage(subtable.Coverage, glyph_map, glyph_ids)
+        remap_class_definition(subtable.ClassDef1, glyph_map)
+        remap_class_definition(subtable.ClassDef2, glyph_map)
+        return
+
+    raise ValueError(f"Unsupported PairPos format: {subtable.Format}")
+
+
+def remap_figure_positioning(font: TTFont) -> None:
+    if "GPOS" not in font:
+        return
+
+    glyph_ids = font.getReverseGlyphMap()
+    for lookup in font["GPOS"].table.LookupList.Lookup:
+        for subtable in pair_position_subtables(lookup):
+            remap_pair_position_subtable(
+                subtable,
+                FIGURE_SWAP_MAP,
+                glyph_ids,
+            )
+
+    if "kern" not in font:
+        return
+    for subtable in font["kern"].kernTables:
+        pairs = getattr(subtable, "kernTable", None)
+        if pairs is None:
+            continue
+        subtable.kernTable = {
+            (
+                FIGURE_SWAP_MAP.get(first, first),
+                FIGURE_SWAP_MAP.get(second, second),
+            ): amount
+            for (first, second), amount in pairs.items()
+        }
+
+
+def promote_tabular_figures(font: TTFont) -> None:
+    swap_figure_outlines_and_metrics(font)
+    swap_numeric_spacing_features(font)
+    remap_figure_positioning(font)
 
 
 def scale_pair_position_subtable(subtable, factor: float) -> int:
@@ -111,6 +270,7 @@ def finalize_font(
     kern_scale: float = DEFAULT_KERN_SCALE,
 ) -> tuple[int, int, int, GuardStats | None]:
     font = TTFont(input_path)
+    promote_tabular_figures(font)
     lookup_count, gpos_values = scale_gpos_kerning(font, kern_scale)
     legacy_pairs = scale_legacy_kerning(font, kern_scale)
     guard_stats = append_guard_lookup(font) if italic else None

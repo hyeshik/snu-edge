@@ -146,6 +146,16 @@ scaled by `0.86 * 0.90 = 0.774`. The original Montserrat GPOS/GSUB tables and
 transformed mark anchors are retained, so ligatures, combining-mark attachment,
 and native pair kerning remain available in the packaged OTFs.
 
+### Numeral Spacing
+
+SNU Edge uses tabular lining figures by default. The transformed Montserrat
+tabular lining and oldstyle sets are recentered in one shared advance-width
+cell for every style and posture. Enable the OpenType `pnum` feature when
+proportional figures are preferred; `tnum` explicitly restores the default
+tabular figures. Decimal points and commas retain their natural fixed widths,
+and fraction, numerator, denominator, superior, and subscript substitutions
+remain available.
+
 ### Mixed-script Color Audit
 
 Compare Korean and Latin ink density and horizontal whitespace against the
@@ -273,16 +283,16 @@ make package SOURCE_DIR=path/to/NanumSquare/fonts BUILD_FLAGS=--no-download
 The repository includes a GitHub Actions workflow at
 `.github/workflows/build-package.yml`. It runs on pushes, pull requests, tag
 pushes matching `v*`, and manual dispatches. The workflow installs FontForge,
-runs the unit tests, builds all 16 OTF files, creates `dist/SNUEdge-0.3.2.zip`,
+runs the unit tests, builds all 16 OTF files, creates `dist/SNUEdge-0.3.3.zip`,
 verifies the package, and uploads it as a workflow artifact. When the workflow
 is triggered by a tag matching `v*`, it also publishes a GitHub Release and
-attaches `SNUEdge-0.3.2.zip` as a release asset.
+attaches `SNUEdge-0.3.3.zip` as a release asset.
 
 Create and push a release tag:
 
 ```sh
-git tag v0.3.2
-git push origin v0.3.2
+git tag v0.3.3
+git push origin v0.3.3
 ```
 
 Reusing an existing release tag is intentionally treated as an error. Use a new

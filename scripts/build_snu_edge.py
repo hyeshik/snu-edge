@@ -12,7 +12,7 @@ from typing import Iterable, Iterator, NamedTuple
 
 FAMILY_NAME = "SNU Edge"
 POSTSCRIPT_FAMILY_NAME = "SNUEdge"
-VERSION = "0.302"
+VERSION = "0.303"
 DEFAULT_SOURCE_ZIP_URL = (
     "https://campaign.naver.com/nanumsquare_neo/download/NaverNanumSquare.zip"
 )
@@ -31,6 +31,21 @@ MONTSERRAT_ITALIC_FILENAME = "Montserrat-Italic-VariableFont_wght.ttf"
 SYNTHETIC_WEIGHT_REFERENCE_CODEPOINT = 0x49
 MASTER_LABELS = ("Light", "Regular", "Bold", "ExtraBold")
 FONT_SUFFIXES = {".otf", ".ttf", ".ttc"}
+FIGURE_NAMES = (
+    "zero",
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "six",
+    "seven",
+    "eight",
+    "nine",
+)
+TABULAR_FIGURE_NAMES = tuple(f"{name}.tf" for name in FIGURE_NAMES) + tuple(
+    f"{name}.tosf" for name in FIGURE_NAMES
+)
 
 class StyleSpec(NamedTuple):
     style: str
@@ -507,6 +522,21 @@ def transform_latin_font(
         changed += 1
     return changed, removed_cjk, overlaps_removed
 
+def normalize_tabular_figure_widths(font) -> int:
+    missing = [name for name in TABULAR_FIGURE_NAMES if name not in font]
+    if missing:
+        raise ValueError(
+            "Montserrat input is missing tabular figures: " + ", ".join(missing)
+        )
+
+    target_width = max(round(font[name].width) for name in TABULAR_FIGURE_NAMES)
+    for name in TABULAR_FIGURE_NAMES:
+        glyph = font[name]
+        extra_width = target_width - glyph.width
+        glyph.left_side_bearing = round(glyph.left_side_bearing + extra_width / 2)
+        glyph.width = target_width
+    return target_width
+
 def rewrite_metadata(font, spec: StyleSpec, italic: bool, italic_angle: float) -> None:
     output_style = style_name(spec.style, italic)
     full_name = f"{FAMILY_NAME} {output_style}"
@@ -591,6 +621,7 @@ def build_variant(
                 y_scale=args.latin_y_scale,
                 y_shift=args.latin_y_shift,
             )
+            tabular_figure_width = normalize_tabular_figure_widths(latin)
             italic_angle = latin.italicangle if italic else 0
             with suppress_c_stderr(quiet):
                 latin.generate(str(transformed_latin_path))
@@ -651,6 +682,7 @@ def build_variant(
         f"latin_spacing_ratio={args.latin_spacing_ratio:.4f}, "
         f"latin_y_scale={args.latin_y_scale:.4f}, "
         f"latin_y_shift={args.latin_y_shift:.1f}, "
+        f"tabular_figure_width={tabular_figure_width}, "
         f"kern_lookups={kern_lookups}, kern_values_scaled={kern_values}, "
         f"legacy_pairs_scaled={legacy_pairs}, italic_guard={guard_summary}, "
         f"cid_flattened={flattened}, validate=0x{validation_state:x}"

@@ -20,7 +20,7 @@ class BuildSnuEdgeTests(unittest.TestCase):
 
         self.assertEqual(builder.FAMILY_NAME, "SNU Edge")
         self.assertEqual(builder.POSTSCRIPT_FAMILY_NAME, "SNUEdge")
-        self.assertEqual(builder.VERSION, "0.302")
+        self.assertEqual(builder.VERSION, "0.303")
         self.assertEqual(
             builder.DEFAULT_SOURCE_ZIP_URL,
             "https://campaign.naver.com/nanumsquare_neo/download/NaverNanumSquare.zip",
@@ -188,6 +188,26 @@ class BuildSnuEdgeTests(unittest.TestCase):
 
         self.assertTrue(builder.normalize_latin_outline(glyph))
         self.assertEqual(glyph.events, ["unlink", "inspect", "remove"])
+
+    def test_tabular_figures_share_one_centered_advance(self):
+        builder = load_builder()
+
+        class FakeGlyph:
+            def __init__(self, width, left_side_bearing):
+                self.width = width
+                self.left_side_bearing = left_side_bearing
+
+        font = {
+            name: FakeGlyph(580 + index % 13, 40)
+            for index, name in enumerate(builder.TABULAR_FIGURE_NAMES)
+        }
+
+        target_width = builder.normalize_tabular_figure_widths(font)
+
+        self.assertEqual(target_width, 592)
+        self.assertEqual({glyph.width for glyph in font.values()}, {592})
+        self.assertEqual(font[builder.TABULAR_FIGURE_NAMES[0]].left_side_bearing, 46)
+        self.assertEqual(font[builder.TABULAR_FIGURE_NAMES[13]].left_side_bearing, 46)
 
     def test_obsolete_nanum_latin_exceptions_are_removed(self):
         builder = load_builder()
