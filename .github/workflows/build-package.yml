@@ -82,6 +82,6 @@ jobs:
           gh release create "${GITHUB_REF_NAME}" \
             --repo "${GITHUB_REPOSITORY}" \
             dist/SNUEdge-*.zip \
-            --title "SNU Edge ${GITHUB_REF_NAME}" \
+            --title "${GITHUB_REF_NAME#v}" \
             --generate-notes \
             --verify-tag
