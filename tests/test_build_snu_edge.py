@@ -20,7 +20,7 @@ class BuildSnuEdgeTests(unittest.TestCase):
 
         self.assertEqual(builder.FAMILY_NAME, "SNU Edge")
         self.assertEqual(builder.POSTSCRIPT_FAMILY_NAME, "SNUEdge")
-        self.assertEqual(builder.VERSION, "0.303")
+        self.assertEqual(builder.VERSION, "0.304")
         self.assertEqual(
             builder.DEFAULT_SOURCE_ZIP_URL,
             "https://campaign.naver.com/nanumsquare_neo/download/NaverNanumSquare.zip",
@@ -89,6 +89,39 @@ class BuildSnuEdgeTests(unittest.TestCase):
             args.source_zip_url,
             "https://example.test/NaverNanumSquare.zip",
         )
+
+    def test_empty_hangul_removal_keeps_outlined_and_non_hangul_glyphs(self):
+        builder = load_builder()
+
+        class FakeGlyph:
+            def __init__(self, character, bounds):
+                self.unicode = ord(character)
+                self.character = character
+                self.bounds = bounds
+
+            def boundingBox(self):
+                return self.bounds
+
+        class FakeFont:
+            def __init__(self):
+                self.items = [
+                    FakeGlyph("갷", (0.0, 0.0, 0.0, 0.0)),
+                    FakeGlyph("딽", (0.0, 0.0, 0.0, 0.0)),
+                    FakeGlyph("낳", (10.0, -20.0, 700.0, 800.0)),
+                    FakeGlyph("A", (0.0, 0.0, 0.0, 0.0)),
+                ]
+
+            def glyphs(self):
+                return self.items
+
+            def removeGlyph(self, glyph):
+                self.items.remove(glyph)
+
+        font = FakeFont()
+        removed = builder.remove_empty_hangul_glyphs(font)
+
+        self.assertEqual(removed, 2)
+        self.assertEqual([glyph.character for glyph in font.items], ["낳", "A"])
 
     def test_source_discovery_prefers_expected_masters(self):
         builder = load_builder()

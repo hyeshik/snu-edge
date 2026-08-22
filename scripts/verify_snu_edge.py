@@ -4,10 +4,12 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from fontTools.pens.boundsPen import BoundsPen
 from fontTools.ttLib import TTFont
 
 from build_snu_edge import (
     FAMILY_NAME,
+    MODERN_HANGUL_RANGE,
     POSTSCRIPT_FAMILY_NAME,
     STYLE_SPECS,
     VERSION,
@@ -30,6 +32,66 @@ FIGURE_NAMES = (
     "eight",
     "nine",
 )
+PRESERVED_FINAL_H = "갛겋낳넣놓닿땋떻랗렇맣멓뭏빻쌓앻얗옇읗좋찧핳햏헿훃"
+EXPECTED_OUTLINED_HANGUL = 2479
+FALLBACK_SAMPLES = "갂갷딽힢"
+
+
+def glyph_has_outline(font: TTFont, glyph_name: str) -> bool:
+    glyph_set = font.getGlyphSet()
+    pen = BoundsPen(glyph_set)
+    glyph_set[glyph_name].draw(pen)
+    return pen.bounds is not None
+
+
+def verify_hangul_fallback_policy(
+    path: Path,
+    font: TTFont,
+) -> None:
+    cmap = font.getBestCmap()
+    hangul = {
+        codepoint: glyph_name
+        for codepoint, glyph_name in cmap.items()
+        if MODERN_HANGUL_RANGE[0] <= codepoint <= MODERN_HANGUL_RANGE[1]
+    }
+    if len(hangul) != EXPECTED_OUTLINED_HANGUL:
+        raise ValueError(
+            f"{path}: expected {EXPECTED_OUTLINED_HANGUL} outlined Hangul glyphs, "
+            f"got {len(hangul)}"
+        )
+
+    empty = [
+        codepoint
+        for codepoint, glyph_name in hangul.items()
+        if not glyph_has_outline(font, glyph_name)
+    ]
+    if empty:
+        glyphs = "".join(chr(codepoint) for codepoint in empty)
+        raise ValueError(f"{path}: empty Hangul glyphs remain encoded: {glyphs}")
+
+    retained_fallback_samples = [
+        character for character in FALLBACK_SAMPLES if ord(character) in hangul
+    ]
+    if retained_fallback_samples:
+        raise ValueError(
+            f"{path}: empty Hangul fallback samples remain encoded: "
+            f"{''.join(retained_fallback_samples)}"
+        )
+
+    missing_preserved = [
+        character for character in PRESERVED_FINAL_H if ord(character) not in cmap
+    ]
+    empty_preserved = [
+        character
+        for character in PRESERVED_FINAL_H
+        if ord(character) in cmap
+        and not glyph_has_outline(font, cmap[ord(character)])
+    ]
+    if missing_preserved or empty_preserved:
+        raise ValueError(
+            f"{path}: valid NanumSquare final-ㅎ glyphs were not preserved; "
+            f"missing={''.join(missing_preserved)!r}, empty={''.join(empty_preserved)!r}"
+        )
 
 
 def single_substitution_mapping(font: TTFont, feature_tag: str) -> dict[str, str]:
@@ -158,7 +220,11 @@ def verify_figure_styles(path: Path, font: TTFont) -> None:
         raise ValueError(f"{path}: frac shaping was broken by figure promotion")
 
 
-def verify_font(path: Path, spec, italic: bool) -> None:
+def verify_font(
+    path: Path,
+    spec,
+    italic: bool,
+) -> None:
     font = TTFont(path)
     missing_tables = REQUIRED_TABLES - set(font.keys())
     if missing_tables:
@@ -204,6 +270,7 @@ def verify_font(path: Path, spec, italic: bool) -> None:
         raise ValueError(f"{path}: upright output has a nonzero italic angle")
 
     verify_figure_styles(path, font)
+    verify_hangul_fallback_policy(path, font)
 
     gpos = font["GPOS"].table
     kern_features = [

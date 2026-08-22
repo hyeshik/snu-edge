@@ -12,7 +12,7 @@ from typing import Iterable, Iterator, NamedTuple
 
 FAMILY_NAME = "SNU Edge"
 POSTSCRIPT_FAMILY_NAME = "SNUEdge"
-VERSION = "0.303"
+VERSION = "0.304"
 DEFAULT_SOURCE_ZIP_URL = (
     "https://campaign.naver.com/nanumsquare_neo/download/NaverNanumSquare.zip"
 )
@@ -46,6 +46,7 @@ FIGURE_NAMES = (
 TABULAR_FIGURE_NAMES = tuple(f"{name}.tf" for name in FIGURE_NAMES) + tuple(
     f"{name}.tosf" for name in FIGURE_NAMES
 )
+MODERN_HANGUL_RANGE = (0xAC00, 0xD7A3)
 
 class StyleSpec(NamedTuple):
     style: str
@@ -425,6 +426,17 @@ def remove_non_cjk_glyphs(font) -> int:
             removed += 1
     return removed
 
+def remove_empty_hangul_glyphs(font) -> int:
+    removed = 0
+    for glyph in list(font.glyphs()):
+        if not MODERN_HANGUL_RANGE[0] <= glyph.unicode <= MODERN_HANGUL_RANGE[1]:
+            continue
+        if glyph.boundingBox() != (0.0, 0.0, 0.0, 0.0):
+            continue
+        font.removeGlyph(glyph)
+        removed += 1
+    return removed
+
 def montserrat_source_path(montserrat_dir: Path, italic: bool) -> Path:
     filename = (
         MONTSERRAT_ITALIC_FILENAME if italic else MONTSERRAT_UPRIGHT_FILENAME
@@ -632,6 +644,7 @@ def build_variant(
         try:
             flattened = flatten_cid_font(font, quiet)
             font.reencode("unicode")
+            empty_hangul_removed = remove_empty_hangul_glyphs(font)
             removed_lookups = remove_layout_lookups(font)
             synthetic_offset_width = (
                 spec.synthetic_weight_steps * args.synthetic_weight_width
@@ -674,6 +687,7 @@ def build_variant(
         f"synthetic_weighted={synthetic_changed}, "
         f"synthetic_offset_width={synthetic_offset_width}, "
         f"nanum_non_cjk_removed={nanum_removed}, "
+        f"empty_hangul_removed={empty_hangul_removed}, "
         f"nanum_layout_lookups_removed={removed_lookups}, "
         f"latin_adjusted={latin_adjusted}, latin_cjk_removed={latin_cjk_removed}, "
         f"latin_overlaps_removed={latin_overlaps_removed}, "

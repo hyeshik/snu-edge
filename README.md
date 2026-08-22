@@ -239,6 +239,12 @@ Default Montserrat settings selected by the proofs and raster audits:
 NanumSquare non-CJK glyphs are removed before merging, so the former lowercase
 `e` synthetic-weight exception is obsolete and has been removed.
 
+SNU Edge does not synthesize missing Hangul. After flattening the NanumSquare
+CID font, the build removes every encoded modern Hangul syllable whose glyph
+has no outline. This removes the stale cmap/CID entries instead of emitting
+blank glyphs, so the platform can select the next Korean font in its fallback
+chain. Outlined source glyphs such as `낳` and `땋` remain unchanged.
+
 The proof-only v1 reference builder retains that exception solely to reproduce
 the historical Light glyph faithfully.
 
@@ -283,16 +289,16 @@ make package SOURCE_DIR=path/to/NanumSquare/fonts BUILD_FLAGS=--no-download
 The repository includes a GitHub Actions workflow at
 `.github/workflows/build-package.yml`. It runs on pushes, pull requests, tag
 pushes matching `v*`, and manual dispatches. The workflow installs FontForge,
-runs the unit tests, builds all 16 OTF files, creates `dist/SNUEdge-0.3.3.zip`,
+runs the unit tests, builds all 16 OTF files, creates `dist/SNUEdge-0.3.4.zip`,
 verifies the package, and uploads it as a workflow artifact. When the workflow
 is triggered by a tag matching `v*`, it also publishes a GitHub Release and
-attaches `SNUEdge-0.3.3.zip` as a release asset.
+attaches `SNUEdge-0.3.4.zip` as a release asset.
 
 Create and push a release tag:
 
 ```sh
-git tag v0.3.3
-git push origin v0.3.3
+git tag v0.3.4
+git push origin v0.3.4
 ```
 
 Reusing an existing release tag is intentionally treated as an error. Use a new
