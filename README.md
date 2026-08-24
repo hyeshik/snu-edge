@@ -229,12 +229,21 @@ Default CJK geometry settings:
 
 Default Montserrat settings selected by the proofs and raster audits:
 
-- Horizontal outline scale: `0.86`
+- Text horizontal outline scale: `0.86`
+- Aspect-preserving punctuation and symbol outline scale: `1.028`
 - Proportional sidebearing and kerning ratio: `q 0.90`
 - Effective horizontal spacing scale: `0.774`
 - Vertical outline and anchor scale: `1.028`
 - Vertical shift: `-26` font units
 - Posture: native Montserrat true italic
+
+Round, square, triangular, arrow, and symmetric mathematical glyphs use the
+same `1.028` scale on both axes. Their vertical scale and shift remain identical
+to the text glyphs, while the existing proportional sidebearing model places
+the wider outlines naturally on the baseline. Percent, per mille, and at signs
+remain at the `0.86` text width. All Montserrat composite references are
+decomposed before any outline is transformed, so every component receives the
+selected geometry exactly once.
 
 NanumSquare non-CJK glyphs are removed before merging, so the former lowercase
 `e` synthetic-weight exception is obsolete and has been removed.

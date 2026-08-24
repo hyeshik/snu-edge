@@ -37,11 +37,22 @@ EXPECTED_OUTLINED_HANGUL = 2479
 FALLBACK_SAMPLES = "갂갷딽힢"
 
 
-def glyph_has_outline(font: TTFont, glyph_name: str) -> bool:
+def glyph_bounds(font: TTFont, glyph_name: str):
     glyph_set = font.getGlyphSet()
     pen = BoundsPen(glyph_set)
     glyph_set[glyph_name].draw(pen)
-    return pen.bounds is not None
+    return pen.bounds
+
+
+def glyph_has_outline(font: TTFont, glyph_name: str) -> bool:
+    return glyph_bounds(font, glyph_name) is not None
+
+
+def glyph_dimensions(font: TTFont, glyph_name: str) -> tuple[float, float]:
+    bounds = glyph_bounds(font, glyph_name)
+    if bounds is None:
+        raise ValueError(f"glyph has no outline: {glyph_name}")
+    return bounds[2] - bounds[0], bounds[3] - bounds[1]
 
 
 def verify_hangul_fallback_policy(
@@ -220,6 +231,56 @@ def verify_figure_styles(path: Path, font: TTFont) -> None:
         raise ValueError(f"{path}: frac shaping was broken by figure promotion")
 
 
+def verify_latin_geometry(path: Path, font: TTFont, *, italic: bool) -> None:
+    upright_geometry = () if italic else (
+        "period",
+        "degree",
+        "copyright",
+        "filledbox",
+        "uni25A1",
+        "uni25C6",
+    )
+    for glyph_name in upright_geometry:
+        width, height = glyph_dimensions(font, glyph_name)
+        aspect = width / height
+        if not 0.90 <= aspect <= 1.10:
+            raise ValueError(
+                f"{path}: {glyph_name} did not preserve its near-square aspect: "
+                f"{aspect:.4f}"
+            )
+
+    if not italic:
+        period_width, _ = glyph_dimensions(font, "period")
+        colon_width, _ = glyph_dimensions(font, "colon")
+        if abs(period_width - colon_width) > 1:
+            raise ValueError(
+                f"{path}: colon components were not transformed like period: "
+                f"{colon_width} != {period_width}"
+            )
+
+    component_pairs = (
+        ("hyphen", "uni2010"),
+        ("emdash", "uni2015"),
+        ("gravecomb", "grave"),
+        ("two.dnom", "uni00B2"),
+        ("periodcentered", "uni2219"),
+    )
+    for component_name, composite_name in component_pairs:
+        component_dimensions = glyph_dimensions(font, component_name)
+        composite_dimensions = glyph_dimensions(font, composite_name)
+        if any(
+            abs(component - composite) > 1
+            for component, composite in zip(
+                component_dimensions,
+                composite_dimensions,
+            )
+        ):
+            raise ValueError(
+                f"{path}: {composite_name} received a repeated transform: "
+                f"{composite_dimensions} != {component_dimensions}"
+            )
+
+
 def verify_font(
     path: Path,
     spec,
@@ -270,6 +331,7 @@ def verify_font(
         raise ValueError(f"{path}: upright output has a nonzero italic angle")
 
     verify_figure_styles(path, font)
+    verify_latin_geometry(path, font, italic=italic)
     verify_hangul_fallback_policy(path, font)
 
     gpos = font["GPOS"].table

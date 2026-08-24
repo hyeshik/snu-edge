@@ -20,7 +20,7 @@ class BuildSnuEdgeTests(unittest.TestCase):
 
         self.assertEqual(builder.FAMILY_NAME, "SNU Edge")
         self.assertEqual(builder.POSTSCRIPT_FAMILY_NAME, "SNUEdge")
-        self.assertEqual(builder.VERSION, "0.304")
+        self.assertEqual(builder.VERSION, "0.305")
         self.assertEqual(
             builder.DEFAULT_SOURCE_ZIP_URL,
             "https://campaign.naver.com/nanumsquare_neo/download/NaverNanumSquare.zip",
@@ -197,30 +197,85 @@ class BuildSnuEdgeTests(unittest.TestCase):
         self.assertAlmostEqual(metrics.left_side_bearing, 38.7)
         self.assertAlmostEqual(metrics.right_side_bearing, 38.7)
 
-    def test_latin_outline_overlaps_are_removed_after_unlinking_references(self):
+    def test_latin_outlines_are_all_unlinked_before_any_are_inspected(self):
         builder = load_builder()
 
         class FakeGlyph:
-            references = (("component", (1, 0, 0, 1, 0, 0)),)
-
-            def __init__(self):
-                self.events = []
+            def __init__(self, name, events, intersects):
+                self.name = name
+                self.events = events
+                self.intersects = intersects
+                self.references = (("component", (1, 0, 0, 1, 0, 0)),)
 
             def unlinkRef(self):
-                self.events.append("unlink")
+                self.events.append(f"unlink:{self.name}")
                 self.references = ()
 
             def selfIntersects(self):
-                self.events.append("inspect")
-                return True
+                self.events.append(f"inspect:{self.name}")
+                return self.intersects
 
             def removeOverlap(self):
-                self.events.append("remove")
+                self.events.append(f"remove:{self.name}")
 
-        glyph = FakeGlyph()
+        class FakeFont:
+            def __init__(self, glyphs):
+                self.items = glyphs
 
-        self.assertTrue(builder.normalize_latin_outline(glyph))
-        self.assertEqual(glyph.events, ["unlink", "inspect", "remove"])
+            def glyphs(self):
+                return self.items
+
+        events = []
+        font = FakeFont(
+            [
+                FakeGlyph("base", events, False),
+                FakeGlyph("composite", events, True),
+            ]
+        )
+
+        self.assertEqual(builder.normalize_latin_outlines(font), 1)
+        self.assertEqual(
+            events,
+            [
+                "unlink:base",
+                "unlink:composite",
+                "inspect:base",
+                "inspect:composite",
+                "remove:composite",
+            ],
+        )
+
+    def test_aspect_preserving_repertoire_excludes_requested_text_symbols(self):
+        builder = load_builder()
+
+        self.assertEqual(len(builder.ASPECT_PRESERVING_CODEPOINTS), 58)
+        for character in ".,:;…·•°©®Ⓐⓐ◌■□▲△◆◇←↑→↓+±×÷∆∞":
+            with self.subTest(character=character):
+                self.assertIn(ord(character), builder.ASPECT_PRESERVING_CODEPOINTS)
+        for character in "%‰@":
+            with self.subTest(character=character):
+                self.assertNotIn(ord(character), builder.ASPECT_PRESERVING_CODEPOINTS)
+
+    def test_aspect_preservation_includes_unencoded_layout_variants(self):
+        builder = load_builder()
+
+        class FakeGlyph:
+            unicode = -1
+
+            def __init__(self, glyphname):
+                self.glyphname = glyphname
+
+        for glyphname in (
+            "period.sc",
+            "periodcentered.case",
+            "bullet.case",
+            "uni24B6.ss01",
+            "arrowleft.case",
+        ):
+            with self.subTest(glyphname=glyphname):
+                self.assertTrue(builder.preserves_original_aspect(FakeGlyph(glyphname)))
+
+        self.assertFalse(builder.preserves_original_aspect(FakeGlyph("percent")))
 
     def test_tabular_figures_share_one_centered_advance(self):
         builder = load_builder()

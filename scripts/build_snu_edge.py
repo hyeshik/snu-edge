@@ -12,7 +12,7 @@ from typing import Iterable, Iterator, NamedTuple
 
 FAMILY_NAME = "SNU Edge"
 POSTSCRIPT_FAMILY_NAME = "SNUEdge"
-VERSION = "0.304"
+VERSION = "0.305"
 DEFAULT_SOURCE_ZIP_URL = (
     "https://campaign.naver.com/nanumsquare_neo/download/NaverNanumSquare.zip"
 )
@@ -47,6 +47,88 @@ TABULAR_FIGURE_NAMES = tuple(f"{name}.tf" for name in FIGURE_NAMES) + tuple(
     f"{name}.tosf" for name in FIGURE_NAMES
 )
 MODERN_HANGUL_RANGE = (0xAC00, 0xD7A3)
+
+# These punctuation marks and symbols rely on roundness, equal dimensions, or
+# rotational symmetry. Scale them isotropically with the selected vertical
+# geometry instead of applying the condensed Latin-text width. Percent, per
+# mille, and at signs intentionally remain part of the condensed text system.
+ASPECT_PRESERVING_CODEPOINTS = frozenset(
+    {
+        0x002A,  # ASTERISK
+        0x002B,  # PLUS SIGN
+        0x002C,  # COMMA
+        0x002E,  # FULL STOP
+        0x003A,  # COLON
+        0x003B,  # SEMICOLON
+        0x003C,  # LESS-THAN SIGN
+        0x003D,  # EQUALS SIGN
+        0x003E,  # GREATER-THAN SIGN
+        0x00A4,  # CURRENCY SIGN
+        0x00A8,  # DIAERESIS
+        0x00A9,  # COPYRIGHT SIGN
+        0x00AE,  # REGISTERED SIGN
+        0x00B0,  # DEGREE SIGN
+        0x00B1,  # PLUS-MINUS SIGN
+        0x00B7,  # MIDDLE DOT
+        0x00D7,  # MULTIPLICATION SIGN
+        0x00F7,  # DIVISION SIGN
+        0x02D9,  # DOT ABOVE
+        0x02DA,  # RING ABOVE
+        0x2022,  # BULLET
+        0x2026,  # HORIZONTAL ELLIPSIS
+        0x212E,  # ESTIMATED SYMBOL
+        0x2190,  # LEFTWARDS ARROW
+        0x2191,  # UPWARDS ARROW
+        0x2192,  # RIGHTWARDS ARROW
+        0x2193,  # DOWNWARDS ARROW
+        0x2194,  # LEFT RIGHT ARROW
+        0x2195,  # UP DOWN ARROW
+        0x2196,  # NORTH WEST ARROW
+        0x2197,  # NORTH EAST ARROW
+        0x2198,  # SOUTH EAST ARROW
+        0x2199,  # SOUTH WEST ARROW
+        0x2205,  # EMPTY SET
+        0x2206,  # INCREMENT
+        0x2219,  # BULLET OPERATOR
+        0x221E,  # INFINITY
+        0x2248,  # ALMOST EQUAL TO
+        0x2260,  # NOT EQUAL TO
+        0x2264,  # LESS-THAN OR EQUAL TO
+        0x2265,  # GREATER-THAN OR EQUAL TO
+        0x24B6,  # CIRCLED LATIN CAPITAL LETTER A
+        0x24D0,  # CIRCLED LATIN SMALL LETTER A
+        0x25A0,  # BLACK SQUARE
+        0x25A1,  # WHITE SQUARE
+        0x25B2,  # BLACK UP-POINTING TRIANGLE
+        0x25B3,  # WHITE UP-POINTING TRIANGLE
+        0x25B6,  # BLACK RIGHT-POINTING TRIANGLE
+        0x25B7,  # WHITE RIGHT-POINTING TRIANGLE
+        0x25BC,  # BLACK DOWN-POINTING TRIANGLE
+        0x25BD,  # WHITE DOWN-POINTING TRIANGLE
+        0x25C0,  # BLACK LEFT-POINTING TRIANGLE
+        0x25C1,  # WHITE LEFT-POINTING TRIANGLE
+        0x25C6,  # BLACK DIAMOND
+        0x25C7,  # WHITE DIAMOND
+        0x25CA,  # LOZENGE
+        0x25CC,  # DOTTED CIRCLE
+        0xA789,  # MODIFIER LETTER COLON
+    }
+)
+ASPECT_PRESERVING_GLYPH_NAMES = frozenset(
+    {
+        "arrowdown.case",
+        "arrowleft.case",
+        "arrowright.case",
+        "arrowup.case",
+        "bullet.case",
+        "period.sc",
+        "periodcentered.case",
+        "periodcentered.loclCAT",
+        "periodcentered.loclCAT.case",
+        "uni24B6.ss01",
+        "uni24D0.ss01",
+    }
+)
 
 class StyleSpec(NamedTuple):
     style: str
@@ -467,13 +549,29 @@ def remove_cjk_from_latin(font) -> int:
             removed += 1
     return removed
 
-def normalize_latin_outline(glyph) -> bool:
-    if glyph.references:
-        glyph.unlinkRef()
-    if not glyph.selfIntersects():
-        return False
-    glyph.removeOverlap()
-    return True
+def normalize_latin_outlines(font) -> int:
+    glyphs = list(font.glyphs())
+
+    # Decompose every composite before transforming any outline. Decomposing a
+    # later composite after one of its components has already been transformed
+    # would apply the affine transform to that component a second time.
+    for glyph in glyphs:
+        if glyph.references:
+            glyph.unlinkRef()
+
+    overlaps_removed = 0
+    for glyph in glyphs:
+        if not glyph.selfIntersects():
+            continue
+        glyph.removeOverlap()
+        overlaps_removed += 1
+    return overlaps_removed
+
+def preserves_original_aspect(glyph) -> bool:
+    return (
+        glyph.unicode in ASPECT_PRESERVING_CODEPOINTS
+        or glyph.glyphname in ASPECT_PRESERVING_GLYPH_NAMES
+    )
 
 def adjust_latin_glyph(
     glyph,
@@ -482,21 +580,20 @@ def adjust_latin_glyph(
     spacing_scale: float,
     y_scale: float,
     y_shift: float,
-) -> bool:
+) -> None:
     original_width = glyph.width
     xmin, _, xmax, _ = glyph.boundingBox()
     left_side_bearing = glyph.left_side_bearing
     right_side_bearing = glyph.right_side_bearing
 
-    overlaps_removed = normalize_latin_outline(glyph)
     glyph.transform((x_scale, 0, 0, y_scale, 0, y_shift))
 
     if original_width == 0:
         glyph.width = 0
-        return overlaps_removed
+        return
     if xmax <= xmin:
         glyph.width = round(original_width * spacing_scale)
-        return overlaps_removed
+        return
 
     metrics = adjusted_glyph_metrics(
         xmin=xmin,
@@ -508,7 +605,6 @@ def adjust_latin_glyph(
     )
     glyph.left_side_bearing = round(metrics.left_side_bearing)
     glyph.width = metrics.advance_width
-    return overlaps_removed
 
 def transform_latin_font(
     font,
@@ -521,12 +617,13 @@ def transform_latin_font(
     font.reencode("unicode")
     removed_cjk = remove_cjk_from_latin(font)
     spacing_scale = x_scale * spacing_ratio
+    overlaps_removed = normalize_latin_outlines(font)
     changed = 0
-    overlaps_removed = 0
     for glyph in list(font.glyphs()):
-        overlaps_removed += adjust_latin_glyph(
+        glyph_x_scale = y_scale if preserves_original_aspect(glyph) else x_scale
+        adjust_latin_glyph(
             glyph,
-            x_scale=x_scale,
+            x_scale=glyph_x_scale,
             spacing_scale=spacing_scale,
             y_scale=y_scale,
             y_shift=y_shift,
