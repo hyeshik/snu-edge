@@ -9,7 +9,7 @@ from fontTools.ttLib import TTFont
 from add_italic_cjk_guard import GuardStats, append_guard_lookup
 
 
-DEFAULT_KERN_SCALE = 0.86 * 0.90
+DEFAULT_KERN_SCALE = 0.92 * 0.88
 HORIZONTAL_VALUE_FIELDS = ("XPlacement", "XAdvance")
 FIGURE_NAMES = (
     "zero",

@@ -20,15 +20,15 @@ class BuildSnuEdgeTests(unittest.TestCase):
 
         self.assertEqual(builder.FAMILY_NAME, "SNU Edge")
         self.assertEqual(builder.POSTSCRIPT_FAMILY_NAME, "SNUEdge")
-        self.assertEqual(builder.VERSION, "0.305")
+        self.assertEqual(builder.VERSION, "0.306")
         self.assertEqual(
             builder.DEFAULT_SOURCE_ZIP_URL,
             "https://campaign.naver.com/nanumsquare_neo/download/NaverNanumSquare.zip",
         )
         self.assertEqual(builder.DEFAULT_CJK_GLYPH_X_SCALE, 0.96)
         self.assertEqual(builder.DEFAULT_CJK_SPACING_SCALE, 0.86)
-        self.assertEqual(builder.DEFAULT_LATIN_GLYPH_X_SCALE, 0.86)
-        self.assertEqual(builder.DEFAULT_LATIN_SPACING_RATIO, 0.90)
+        self.assertEqual(builder.DEFAULT_LATIN_GLYPH_X_SCALE, 0.92)
+        self.assertEqual(builder.DEFAULT_LATIN_SPACING_RATIO, 0.88)
         self.assertEqual(builder.DEFAULT_LATIN_Y_SCALE, 1.028)
         self.assertEqual(builder.DEFAULT_LATIN_Y_SHIFT, -26)
 
@@ -54,7 +54,7 @@ class BuildSnuEdgeTests(unittest.TestCase):
         self.assertEqual(specs["Black"].synthetic_weight_steps, 1)
         self.assertEqual(
             [spec.latin_weight for spec in specs.values()],
-            [285, 367, 434, 495, 545, 603, 652, 711],
+            [281, 357, 419, 475, 522, 575, 620, 675],
         )
 
     def test_master_classifier_supports_legacy_and_neo_filenames(self):
@@ -193,9 +193,9 @@ class BuildSnuEdgeTests(unittest.TestCase):
             ),
         )
 
-        self.assertEqual(metrics.advance_width, 593)
-        self.assertAlmostEqual(metrics.left_side_bearing, 38.7)
-        self.assertAlmostEqual(metrics.right_side_bearing, 38.7)
+        self.assertEqual(metrics.advance_width, 633)
+        self.assertAlmostEqual(metrics.left_side_bearing, 40.48)
+        self.assertAlmostEqual(metrics.right_side_bearing, 40.48)
 
     def test_latin_outlines_are_all_unlinked_before_any_are_inspected(self):
         builder = load_builder()

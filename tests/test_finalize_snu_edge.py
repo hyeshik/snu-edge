@@ -25,7 +25,7 @@ class FinalizeSnuEdgeTests(unittest.TestCase):
     def test_default_kern_scale_matches_width_times_q(self):
         finalizer = load_finalizer()
 
-        self.assertAlmostEqual(finalizer.DEFAULT_KERN_SCALE, 0.774)
+        self.assertAlmostEqual(finalizer.DEFAULT_KERN_SCALE, 0.8096)
 
     def test_value_record_scales_horizontal_values_only(self):
         finalizer = load_finalizer()

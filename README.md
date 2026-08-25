@@ -141,8 +141,8 @@ bbox_gap = RSB(left) + LSB(right) + native_kern
 ```
 
 The selected proportional model is part of the production font build.
-Montserrat outlines are scaled to 86% width; sidebearings and native kerning are
-scaled by `0.86 * 0.90 = 0.774`. The original Montserrat GPOS/GSUB tables and
+Montserrat text outlines are scaled to 92% width; sidebearings and native
+kerning are scaled by `0.92 * 0.88 = 0.8096`. The original Montserrat GPOS/GSUB tables and
 transformed mark anchors are retained, so ligatures, combining-mark attachment,
 and native pair kerning remain available in the packaged OTFs.
 
@@ -209,14 +209,14 @@ make clean
 The default build creates upright and italic variants with these CJK and Latin
 weight sources:
 
-- Thin: NanumSquare Light; Montserrat 285
-- Light: NanumSquare Light plus one CJK synthetic step; Montserrat 367
-- Regular: NanumSquare Regular; Montserrat 434
-- Medium: NanumSquare Regular plus one CJK synthetic step; Montserrat 495
-- SemiBold: NanumSquare Bold; Montserrat 545
-- Bold: NanumSquare Bold plus one CJK synthetic step; Montserrat 603
-- ExtraBold: NanumSquare ExtraBold; Montserrat 652
-- Black: NanumSquare ExtraBold plus one CJK synthetic step; Montserrat 711
+- Thin: NanumSquare Light; Montserrat 281
+- Light: NanumSquare Light plus one CJK synthetic step; Montserrat 357
+- Regular: NanumSquare Regular; Montserrat 419
+- Medium: NanumSquare Regular plus one CJK synthetic step; Montserrat 475
+- SemiBold: NanumSquare Bold; Montserrat 522
+- Bold: NanumSquare Bold plus one CJK synthetic step; Montserrat 575
+- ExtraBold: NanumSquare ExtraBold; Montserrat 620
+- Black: NanumSquare ExtraBold plus one CJK synthetic step; Montserrat 675
 
 This produces 16 OTF files in total.
 
@@ -229,10 +229,10 @@ Default CJK geometry settings:
 
 Default Montserrat settings selected by the proofs and raster audits:
 
-- Text horizontal outline scale: `0.86`
+- Text horizontal outline scale: `0.92`
 - Aspect-preserving punctuation and symbol outline scale: `1.028`
-- Proportional sidebearing and kerning ratio: `q 0.90`
-- Effective horizontal spacing scale: `0.774`
+- Proportional sidebearing and kerning ratio: `q 0.88`
+- Effective horizontal spacing scale: `0.8096`
 - Vertical outline and anchor scale: `1.028`
 - Vertical shift: `-26` font units
 - Posture: native Montserrat true italic
@@ -241,9 +241,15 @@ Round, square, triangular, arrow, and symmetric mathematical glyphs use the
 same `1.028` scale on both axes. Their vertical scale and shift remain identical
 to the text glyphs, while the existing proportional sidebearing model places
 the wider outlines naturally on the baseline. Percent, per mille, and at signs
-remain at the `0.86` text width. All Montserrat composite references are
+remain at the `0.92` text width. All Montserrat composite references are
 decomposed before any outline is transformed, so every component receives the
 selected geometry exactly once.
+
+The source-weight curve was selected from rasterized merged-font specimens,
+not by applying the inverse width ratio to the old weights. Regular and Bold
+were first matched at Montserrat 419 and 575 using vertical-stem width, body ink
+coverage, and mixed Korean/Latin title images. The remaining styles follow the
+measured curve while keeping the full weight ladder monotonic.
 
 NanumSquare non-CJK glyphs are removed before merging, so the former lowercase
 `e` synthetic-weight exception is obsolete and has been removed.
@@ -281,8 +287,8 @@ fontforge -lang=py -script scripts/build_snu_edge.py \
   --output-dir build/otf \
   --cjk-glyph-x-scale 0.96 \
   --cjk-spacing-scale 0.86 \
-  --latin-glyph-x-scale 0.86 \
-  --latin-spacing-ratio 0.90 \
+  --latin-glyph-x-scale 0.92 \
+  --latin-spacing-ratio 0.88 \
   --latin-y-scale 1.028 \
   --latin-y-shift -26
 ```
@@ -298,16 +304,16 @@ make package SOURCE_DIR=path/to/NanumSquare/fonts BUILD_FLAGS=--no-download
 The repository includes a GitHub Actions workflow at
 `.github/workflows/build-package.yml`. It runs on pushes, pull requests, tag
 pushes matching `v*`, and manual dispatches. The workflow installs FontForge,
-runs the unit tests, builds all 16 OTF files, creates `dist/SNUEdge-0.3.4.zip`,
+runs the unit tests, builds all 16 OTF files, creates `dist/SNUEdge-0.3.6.zip`,
 verifies the package, and uploads it as a workflow artifact. When the workflow
 is triggered by a tag matching `v*`, it also publishes a GitHub Release and
-attaches `SNUEdge-0.3.4.zip` as a release asset.
+attaches `SNUEdge-0.3.6.zip` as a release asset.
 
 Create and push a release tag:
 
 ```sh
-git tag v0.3.4
-git push origin v0.3.4
+git tag v0.3.6
+git push origin v0.3.6
 ```
 
 Reusing an existing release tag is intentionally treated as an error. Use a new

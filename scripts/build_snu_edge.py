@@ -12,7 +12,7 @@ from typing import Iterable, Iterator, NamedTuple
 
 FAMILY_NAME = "SNU Edge"
 POSTSCRIPT_FAMILY_NAME = "SNUEdge"
-VERSION = "0.305"
+VERSION = "0.306"
 DEFAULT_SOURCE_ZIP_URL = (
     "https://campaign.naver.com/nanumsquare_neo/download/NaverNanumSquare.zip"
 )
@@ -22,8 +22,8 @@ DEFAULT_MONTSERRAT_DIR = "vendor/montserrat"
 DEFAULT_OUTPUT_DIR = "instance_otf"
 DEFAULT_CJK_GLYPH_X_SCALE = 0.96
 DEFAULT_CJK_SPACING_SCALE = 0.86
-DEFAULT_LATIN_GLYPH_X_SCALE = 0.86
-DEFAULT_LATIN_SPACING_RATIO = 0.90
+DEFAULT_LATIN_GLYPH_X_SCALE = 0.92
+DEFAULT_LATIN_SPACING_RATIO = 0.88
 DEFAULT_LATIN_Y_SCALE = 1.028
 DEFAULT_LATIN_Y_SHIFT = -26
 MONTSERRAT_UPRIGHT_FILENAME = "Montserrat-VariableFont_wght.ttf"
@@ -144,14 +144,14 @@ class AdjustedMetrics(NamedTuple):
     outline_width: float
 
 STYLE_SPECS = (
-    StyleSpec("Thin", 100, "Light", 285),
-    StyleSpec("Light", 300, "Light", 367, 1),
-    StyleSpec("Regular", 400, "Regular", 434),
-    StyleSpec("Medium", 500, "Regular", 495, 1),
-    StyleSpec("SemiBold", 600, "Bold", 545),
-    StyleSpec("Bold", 700, "Bold", 603, 1),
-    StyleSpec("ExtraBold", 800, "ExtraBold", 652),
-    StyleSpec("Black", 900, "ExtraBold", 711, 1),
+    StyleSpec("Thin", 100, "Light", 281),
+    StyleSpec("Light", 300, "Light", 357, 1),
+    StyleSpec("Regular", 400, "Regular", 419),
+    StyleSpec("Medium", 500, "Regular", 475, 1),
+    StyleSpec("SemiBold", 600, "Bold", 522),
+    StyleSpec("Bold", 700, "Bold", 575, 1),
+    StyleSpec("ExtraBold", 800, "ExtraBold", 620),
+    StyleSpec("Black", 900, "ExtraBold", 675, 1),
 )
 
 CJK_CODEPOINT_RANGES = (
