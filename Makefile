@@ -8,9 +8,8 @@ OUTPUT_DIR ?= instance_otf
 MONTSERRAT_DIR ?= vendor/montserrat
 V1_REFERENCE_DIR ?= proof/generated/v1_otf
 BUILD_FLAGS ?=
-PACKAGE_VERSION ?= 0.3.6
-PACKAGE_NAME ?= SNUEdge-$(PACKAGE_VERSION)
-PACKAGE_DIR ?= dist/$(PACKAGE_NAME)
+VERSION ?= $(shell sed -n 's/^VERSION = "\(.*\)"$$/\1/p' scripts/build_snu_edge.py)
+PACKAGE_NAME ?= SNUEdge-$(VERSION)
 PACKAGE_ZIP ?= dist/$(PACKAGE_NAME).zip
 PROOF_SOURCE ?= proof/montserrat-proof.typ
 PROOF_PDF ?= proof/SNUEdge-Montserrat-Proof.pdf
@@ -24,7 +23,7 @@ MIXED_SCRIPT_REPORT ?= proof/generated/mixed-script-color-audit.md
 MIXED_SCRIPT_CHART ?= proof/generated/mixed-script-color-audit.png
 APPENDARD_DIR ?= ../snu-appendard/dist/otf
 
-.PHONY: build montserrat v1-reference test verify package spacing-audit weight-audit mixed-script-audit proof long-proof clean
+.PHONY: build montserrat v1-reference test verify distribution spacing-audit weight-audit mixed-script-audit proof long-proof clean
 
 build: montserrat
 	$(FONTFORGE) -lang=py -script scripts/build_snu_edge.py \
@@ -92,12 +91,10 @@ long-proof: build
 		"$(LONG_PROOF_SOURCE)" \
 		"$(LONG_PROOF_PDF)"
 
-package: verify
-	rm -rf dist
-	mkdir -p "$(PACKAGE_DIR)"
-	cp LICENSE README.md requirements.txt "$(PACKAGE_DIR)/"
-	cp "$(OUTPUT_DIR)"/SNUEdge-*.otf "$(PACKAGE_DIR)/"
-	cd dist && zip -qr "$(PACKAGE_NAME).zip" "$(PACKAGE_NAME)"
+distribution: verify
+	$(PYTHON) scripts/package_distribution.py \
+		--input-dir "$(OUTPUT_DIR)" \
+		--output "$(PACKAGE_ZIP)"
 	test -f "$(PACKAGE_ZIP)"
 
 clean:

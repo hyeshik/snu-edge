@@ -14,16 +14,16 @@ from PIL import Image, ImageDraw
 
 
 STYLES = (
-    ("Thin", 100, 285),
-    ("Light", 300, 367),
-    ("Regular", 400, 434),
-    ("Medium", 500, 495),
-    ("SemiBold", 600, 545),
-    ("Bold", 700, 603),
-    ("ExtraBold", 800, 652),
-    ("Black", 900, 711),
+    ("Thin", 100, 281),
+    ("Light", 300, 357),
+    ("Regular", 400, 419),
+    ("Medium", 500, 475),
+    ("SemiBold", 600, 522),
+    ("Bold", 700, 575),
+    ("ExtraBold", 800, 620),
+    ("Black", 900, 675),
 )
-WIDTH_SCALE = 0.86
+WIDTH_SCALE = 0.92
 CHARACTER = "H"
 
 
@@ -322,7 +322,7 @@ def build_report(
             "hinting": False,
             "montserrat_width_scale": WIDTH_SCALE,
             "criterion": "vertical thickness of the center H crossbar",
-            "secondary_metric": "vertical stem thickness after 86% horizontal scaling",
+            "secondary_metric": "vertical stem thickness after 92% horizontal scaling",
         },
         "styles": styles,
     }

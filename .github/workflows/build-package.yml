@@ -38,18 +38,16 @@ jobs:
       - name: Run unit tests
         run: make PYTHON=.venv/bin/python test
 
-      - name: Build package
-        run: make PYTHON=.venv/bin/python package
+      - name: Build distribution
+        run: make PYTHON=.venv/bin/python distribution
 
-      - name: Verify package
+      - name: Verify distribution
         run: |
           test "$(find instance_otf -maxdepth 1 -name 'SNUEdge-*.otf' | wc -l)" -eq 16
           test "$(find dist -maxdepth 1 -name 'SNUEdge-*.zip' | wc -l)" -eq 1
           package="$(find dist -maxdepth 1 -name 'SNUEdge-*.zip' -print -quit)"
-          package_name="$(basename "${package}" .zip)"
-          archive_root="$(unzip -Z1 "${package}" | sed -n '1s|/.*||p')"
-          test "${archive_root}" = "${package_name}"
-          unzip -l "${package}"
+          test "$(unzip -Z1 "${package}" | grep -Ec '^[^/]+$')" -eq 19
+          test -z "$(unzip -Z1 "${package}" | grep -Ev '^(SNUEdge-[A-Za-z]+\.otf|LICENSE(-(Montserrat|NanumSquare))?\.txt)$')"
 
       - name: Upload package artifact
         uses: actions/upload-artifact@v7

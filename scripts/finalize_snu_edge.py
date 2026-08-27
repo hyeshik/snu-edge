@@ -268,12 +268,15 @@ def finalize_font(
     *,
     italic: bool,
     kern_scale: float = DEFAULT_KERN_SCALE,
+    revision: float | None = None,
 ) -> tuple[int, int, int, GuardStats | None]:
     font = TTFont(input_path)
     promote_tabular_figures(font)
     lookup_count, gpos_values = scale_gpos_kerning(font, kern_scale)
     legacy_pairs = scale_legacy_kerning(font, kern_scale)
     guard_stats = append_guard_lookup(font) if italic else None
+    if revision is not None:
+        font["head"].fontRevision = revision
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     font.save(output_path)

@@ -64,8 +64,8 @@ Build the current SNU Edge family and compile the Typst proof:
 make proof
 ```
 
-Build the long-form proof using the selected 40% density-correction weights, New B
-vertical geometry, and proportional `q 0.90` spacing:
+Build the long-form proof using the measured 0.92-width source weights, the
+selected vertical geometry, and proportional `q 0.88` spacing:
 
 ```sh
 make long-proof
@@ -80,7 +80,7 @@ proof/SNUEdge-Montserrat-Proof.pdf
 ```
 
 It contains the measured weight candidates for all eight upright and italic
-styles, a complete `84/86/88%` width by `-10/0/+10` tracking matrix, and
+styles, a complete `90/92/94%` width by `-10/0/+10` tracking matrix, and
 natural mixed-script paragraphs comparing the proof-only SNU Edge v1 reference
 with raw and adjusted Montserrat proposals. Later sections cover small sizes,
 figures, the discarded additive tracking control, proportional-spacing
@@ -100,7 +100,7 @@ make weight-audit
 
 The audit renders the proof-only SNU Edge v1 reference and pinned Montserrat
 without hinting at 2000 ppem. It records the H crossbar match used during weight
-selection and the independent 86% vertical-stem check:
+selection and the independent 92% vertical-stem check:
 
 ```text
 proof/generated/h-stroke-weight-audit.json
@@ -128,7 +128,7 @@ pair positioning is context-independent after glyph substitution. The discarded
 additive control in the Typst design proof follows this rule:
 
 ```text
-edge_gap = 0.86 * native_gap - 5
+edge_gap = 0.92 * native_gap - 5
 ```
 
 The proof also shows the selected proportional model. It separates the glyph
@@ -136,7 +136,7 @@ outline's contour recession from the nominal pair gap and scales only the
 sidebearings plus native kerning:
 
 ```text
-edge_gap = 0.86 * (contour_recession + q * bbox_gap)
+edge_gap = 0.92 * (contour_recession + q * bbox_gap)
 bbox_gap = RSB(left) + LSB(right) + native_kern
 ```
 
@@ -191,12 +191,15 @@ target ink clearance, and 5-unit buckets at UPM 1000. It does not insert a
 space character. Applications that split Latin and Hangul into separate shaping
 runs may still need an equivalent typesetting boundary rule.
 
-Build a ZIP package containing the generated OTF files, `README.md`, and
-`LICENSE`:
+Build the distribution ZIP:
 
 ```sh
-make package
+make distribution
 ```
+
+The ZIP has no wrapper directory. Its root contains only the 16 OTF files,
+`LICENSE.txt`, `LICENSE-Montserrat.txt`, and `LICENSE-NanumSquare.txt`; proofs,
+the README, requirements, and other project files are not distributed.
 
 Remove generated fonts and downloaded source files:
 
@@ -219,6 +222,9 @@ weight sources:
 - Black: NanumSquare ExtraBold plus one CJK synthetic step; Montserrat 675
 
 This produces 16 OTF files in total.
+
+Every font reports version `0.6.0` in its OpenType name records and `0.6` in
+the numeric `head.fontRevision` field.
 
 ## Build Details
 
@@ -296,7 +302,7 @@ fontforge -lang=py -script scripts/build_snu_edge.py \
 The same options can be passed through `make` variables:
 
 ```sh
-make package SOURCE_DIR=path/to/NanumSquare/fonts BUILD_FLAGS=--no-download
+make distribution SOURCE_DIR=path/to/NanumSquare/fonts BUILD_FLAGS=--no-download
 ```
 
 ## GitHub Actions
@@ -304,16 +310,16 @@ make package SOURCE_DIR=path/to/NanumSquare/fonts BUILD_FLAGS=--no-download
 The repository includes a GitHub Actions workflow at
 `.github/workflows/build-package.yml`. It runs on pushes, pull requests, tag
 pushes matching `v*`, and manual dispatches. The workflow installs FontForge,
-runs the unit tests, builds all 16 OTF files, creates `dist/SNUEdge-0.3.6.zip`,
+runs the unit tests, builds all 16 OTF files, creates `dist/SNUEdge-0.6.0.zip`,
 verifies the package, and uploads it as a workflow artifact. When the workflow
 is triggered by a tag matching `v*`, it also publishes a GitHub Release and
-attaches `SNUEdge-0.3.6.zip` as a release asset.
+attaches `SNUEdge-0.6.0.zip` as a release asset.
 
 Create and push a release tag:
 
 ```sh
-git tag v0.3.6
-git push origin v0.3.6
+git tag v0.6.0
+git push origin v0.6.0
 ```
 
 Reusing an existing release tag is intentionally treated as an error. Use a new
@@ -325,6 +331,7 @@ version tag for each published package.
 .github/workflows/build-package.yml  GitHub Actions package build
 LICENSE                       License notice and SIL Open Font License text
 scripts/build_snu_edge.py  FontForge build script
+scripts/package_distribution.py  Flat OTF-and-license distribution builder
 scripts/build_v1_reference.py  Proof-only historical v1 family builder
 scripts/fetch_montserrat.py  Pinned Montserrat downloader and verifier
 scripts/add_italic_cjk_guard.py  Reusable italic Latin-to-Hangul guard logic
@@ -333,6 +340,7 @@ scripts/verify_snu_edge.py  Complete production family verifier
 scripts/audit_h_stroke_weights.py  Raster H crossbar weight audit generator
 scripts/audit_montserrat_spacing.py  Full pair-spacing audit generator
 tests/                         Unit tests for pure helper logic
+licenses/                      Upstream font license texts
 proof/montserrat-proof.typ     Typst source for Montserrat comparison proof
 instance_otf/                  Generated OTF output
 dist/                          Generated ZIP package

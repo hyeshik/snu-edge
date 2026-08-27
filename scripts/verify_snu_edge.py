@@ -13,6 +13,7 @@ from build_snu_edge import (
     POSTSCRIPT_FAMILY_NAME,
     STYLE_SPECS,
     VERSION,
+    font_revision,
     postscript_style_name,
     style_name,
 )
@@ -321,6 +322,14 @@ def verify_font(
             raise ValueError(
                 f"{path}: name ID {name_id} is {actual!r}, expected {expected!r}"
             )
+
+    expected_revision = font_revision()
+    actual_revision = font["head"].fontRevision
+    if abs(actual_revision - expected_revision) > 1 / 65536:
+        raise ValueError(
+            f"{path}: head.fontRevision is {actual_revision}, "
+            f"expected {expected_revision}"
+        )
 
     if font["OS/2"].usWeightClass != spec.weight:
         raise ValueError(f"{path}: incorrect OS/2 weight class")

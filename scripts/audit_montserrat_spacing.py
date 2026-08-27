@@ -16,14 +16,14 @@ from fontTools.ttLib import TTFont
 
 
 STYLES = (
-    ("Thin", 285),
-    ("Light", 367),
-    ("Regular", 434),
-    ("Medium", 495),
-    ("SemiBold", 545),
-    ("Bold", 603),
-    ("ExtraBold", 652),
-    ("Black", 711),
+    ("Thin", 281),
+    ("Light", 357),
+    ("Regular", 419),
+    ("Medium", 475),
+    ("SemiBold", 522),
+    ("Bold", 575),
+    ("ExtraBold", 620),
+    ("Black", 675),
 )
 
 LOWER = "abcdefghijklmnopqrstuvwxyz"
@@ -423,9 +423,9 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=Path("proof/generated/montserrat-spacing-audit.json"),
     )
-    parser.add_argument("--width", type=float, default=0.86)
+    parser.add_argument("--width", type=float, default=0.92)
     parser.add_argument("--tracking", type=float, default=-5.0)
-    parser.add_argument("--spacing-scale", type=float, default=0.90)
+    parser.add_argument("--spacing-scale", type=float, default=0.88)
     parser.add_argument("--ppem", type=int, default=500)
     parser.add_argument("--extreme-limit", type=int, default=12)
     return parser.parse_args()

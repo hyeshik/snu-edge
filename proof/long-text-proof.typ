@@ -20,14 +20,14 @@
 #let accent = rgb("2257c7")
 
 #let styles = (
-  (name: "Thin", edge-weight: 100, latin-weight: 285),
-  (name: "Light", edge-weight: 300, latin-weight: 367),
-  (name: "Regular", edge-weight: 400, latin-weight: 434),
-  (name: "Medium", edge-weight: 500, latin-weight: 495),
-  (name: "SemiBold", edge-weight: 600, latin-weight: 545),
-  (name: "Bold", edge-weight: 700, latin-weight: 603),
-  (name: "ExtraBold", edge-weight: 800, latin-weight: 652),
-  (name: "Black", edge-weight: 900, latin-weight: 711),
+  (name: "Thin", edge-weight: 100, latin-weight: 281),
+  (name: "Light", edge-weight: 300, latin-weight: 357),
+  (name: "Regular", edge-weight: 400, latin-weight: 419),
+  (name: "Medium", edge-weight: 500, latin-weight: 475),
+  (name: "SemiBold", edge-weight: 600, latin-weight: 522),
+  (name: "Bold", edge-weight: 700, latin-weight: 575),
+  (name: "ExtraBold", edge-weight: 800, latin-weight: 620),
+  (name: "Black", edge-weight: 900, latin-weight: 675),
 )
 #let style-by-name(name) = styles.find(item => item.name == name)
 #let sentence-space = 0.25
@@ -180,10 +180,10 @@
     #grid(
       columns: (43mm, 1fr),
       row-gutter: 2.5mm,
-      [#text(weight: 700)[Weight match]], [40% long-text density correction],
-      [#text(weight: 700)[Width]], [86%],
+      [#text(weight: 700)[Weight match]], [measured 0.92 raster curve],
+      [#text(weight: 700)[Width]], [92%],
       [#text(weight: 700)[Height / baseline]], [New B · 102.8% / yShift −26],
-      [#text(weight: 700)[Spacing]], [proportional q 0.90],
+      [#text(weight: 700)[Spacing]], [proportional q 0.88],
       [#text(weight: 700)[Script boundary]], [CJK→Latin 0.215em · Latin→CJK attached],
     )
   ]
@@ -193,7 +193,7 @@
 #section-title(
   "01 · REGULAR UPRIGHT",
   "긴 호흡의 기술 문서",
-  note: "Regular 400 / Montserrat 434 · 10.5 pt · two-column reading measure",
+  note: "Regular 400 / Montserrat 419 · 10.5 pt · two-column reading measure",
 )
 #columns(2, gutter: 9mm)[
   #paragraph(p1)
@@ -210,7 +210,7 @@
 #section-title(
   "02 · REGULAR UPRIGHT",
   "넓은 판면에서의 문단 리듬",
-  note: "Regular 400 / Montserrat 434 · 12 pt · single column",
+  note: "Regular 400 / Montserrat 419 · 12 pt · single column",
 )
 #align(center)[
   #block(width: 142mm)[
@@ -228,7 +228,7 @@
 #section-title(
   "03 · BODY WEIGHT",
   "Light · Regular · Medium",
-  note: "The same long paragraph at three text weights; all use New B and q 0.90.",
+  note: "The same long paragraph at three text weights; all use New B and q 0.88.",
 )
 #for name in ("Light", "Regular", "Medium") [
   #let selected = style-by-name(name)
@@ -263,7 +263,7 @@
 #section-title(
   "05 · DOCUMENT HIERARCHY",
   "제목과 본문을 함께 읽기",
-  note: "Selected 40% density-correction weights across a realistic report hierarchy.",
+  note: "Measured 0.92 source weights across a realistic report hierarchy.",
 )
 #text(font: "SNU Edge", weight: 700, size: 22pt)[재현 가능한 모델 평가]
 #v(2mm)
@@ -280,7 +280,7 @@
 #paragraph(p5)
 #v(3mm)
 #block(width: 100%, inset: 4mm, fill: panel, radius: 1.5mm)[
-  #text(size: 7pt, weight: 700, fill: accent)[NOTE · LIGHT 300 / MONTSERRAT 367]
+  #text(size: 7pt, weight: 700, fill: accent)[NOTE · LIGHT 300 / MONTSERRAT 357]
   #v(1.5mm)
   #mixed(p6, style-by-name("Light"), size: 9pt)
 ]
@@ -289,7 +289,7 @@
 #section-title(
   "06 · FAMILY COLOR",
   "모든 weight의 긴 문장 농도",
-  note: "Each row uses its selected 40% density-correction Montserrat instance.",
+  note: "Each row uses its measured 0.92 Montserrat source-weight instance.",
 )
 #for (index, selected) in styles.enumerate() [
   #block(width: 100%, inset: (x: 3mm, y: 2.2mm), fill: if calc.rem(index, 2) == 0 { panel } else { white })[

@@ -20,7 +20,7 @@ class BuildSnuEdgeTests(unittest.TestCase):
 
         self.assertEqual(builder.FAMILY_NAME, "SNU Edge")
         self.assertEqual(builder.POSTSCRIPT_FAMILY_NAME, "SNUEdge")
-        self.assertEqual(builder.VERSION, "0.306")
+        self.assertEqual(builder.VERSION, "0.6.0")
         self.assertEqual(
             builder.DEFAULT_SOURCE_ZIP_URL,
             "https://campaign.naver.com/nanumsquare_neo/download/NaverNanumSquare.zip",
@@ -31,6 +31,16 @@ class BuildSnuEdgeTests(unittest.TestCase):
         self.assertEqual(builder.DEFAULT_LATIN_SPACING_RATIO, 0.88)
         self.assertEqual(builder.DEFAULT_LATIN_Y_SCALE, 1.028)
         self.assertEqual(builder.DEFAULT_LATIN_Y_SHIFT, -26)
+
+    def test_head_revision_uses_the_semantic_font_version(self):
+        builder = load_builder()
+
+        self.assertEqual(builder.font_revision(), 0.6)
+        self.assertEqual(builder.font_revision("0.6.1"), 0.601)
+        self.assertEqual(builder.font_revision("1.0"), 1.0)
+        for ambiguous in ("0.10.0", "0.6.100", "0"):
+            with self.assertRaises(ValueError):
+                builder.font_revision(ambiguous)
 
     def test_style_matrix_uses_nanumsquare_masters_and_synthetic_steps(self):
         builder = load_builder()

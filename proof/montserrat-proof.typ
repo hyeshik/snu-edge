@@ -16,75 +16,75 @@
 
 #let styles = (
   (
-    name: "Thin", edge-weight: 100, chosen: 285,
+    name: "Thin", edge-weight: 100, chosen: 281,
     candidates: (
-      (weight: 285, reason: "round density"),
-      (weight: 288, reason: "H stem @ 86%"),
+      (weight: 281, reason: "measured curve"),
+      (weight: 285, reason: "previous release"),
       (weight: 290, reason: "overall ink"),
       (weight: 320, reason: "stem-text high"),
     ),
   ),
   (
-    name: "Light", edge-weight: 300, chosen: 367,
+    name: "Light", edge-weight: 300, chosen: 357,
     candidates: (
       (weight: 355, reason: "ink / round"),
-      (weight: 361, reason: "H stem @ 86%"),
-      (weight: 367, reason: "40% density correction"),
+      (weight: 357, reason: "measured curve"),
+      (weight: 367, reason: "previous release"),
       (weight: 390, reason: "stem-text high"),
     ),
   ),
   (
-    name: "Regular", edge-weight: 400, chosen: 434,
+    name: "Regular", edge-weight: 400, chosen: 419,
     candidates: (
-      (weight: 419, reason: "H stem @ 86%"),
-      (weight: 420, reason: "round density"),
-      (weight: 434, reason: "40% density correction"),
-      (weight: 455, reason: "stem-text high"),
+      (weight: 405, reason: "inverse-ratio low"),
+      (weight: 419, reason: "measured choice"),
+      (weight: 426, reason: "conservative"),
+      (weight: 434, reason: "previous release"),
     ),
   ),
   (
-    name: "Medium", edge-weight: 500, chosen: 495,
+    name: "Medium", edge-weight: 500, chosen: 475,
     candidates: (
-      (weight: 475, reason: "round density"),
-      (weight: 478, reason: "H stem @ 86%"),
-      (weight: 495, reason: "40% density correction"),
+      (weight: 460, reason: "inverse-ratio low"),
+      (weight: 475, reason: "measured curve"),
+      (weight: 495, reason: "previous release"),
       (weight: 510, reason: "stem-text high"),
     ),
   ),
   (
-    name: "SemiBold", edge-weight: 600, chosen: 545,
+    name: "SemiBold", edge-weight: 600, chosen: 522,
     candidates: (
-      (weight: 535, reason: "round density"),
-      (weight: 537, reason: "H stem @ 86%"),
-      (weight: 545, reason: "40% density correction"),
+      (weight: 510, reason: "inverse-ratio low"),
+      (weight: 522, reason: "measured curve"),
+      (weight: 545, reason: "previous release"),
       (weight: 565, reason: "stem-text high"),
     ),
   ),
   (
-    name: "Bold", edge-weight: 700, chosen: 603,
+    name: "Bold", edge-weight: 700, chosen: 575,
     candidates: (
-      (weight: 570, reason: "overall ink"),
-      (weight: 585, reason: "round density"),
-      (weight: 588, reason: "H stem @ 86%"),
-      (weight: 603, reason: "40% density correction"),
+      (weight: 565, reason: "inverse-ratio low"),
+      (weight: 575, reason: "measured choice"),
+      (weight: 585, reason: "conservative"),
+      (weight: 603, reason: "previous release"),
     ),
   ),
   (
-    name: "ExtraBold", edge-weight: 800, chosen: 652,
+    name: "ExtraBold", edge-weight: 800, chosen: 620,
     candidates: (
-      (weight: 640, reason: "H stem @ 86%"),
-      (weight: 645, reason: "round density"),
-      (weight: 652, reason: "40% density correction"),
-      (weight: 660, reason: "stem-text high"),
+      (weight: 600, reason: "inverse-ratio low"),
+      (weight: 620, reason: "measured curve"),
+      (weight: 640, reason: "conservative"),
+      (weight: 652, reason: "previous release"),
     ),
   ),
   (
-    name: "Black", edge-weight: 900, chosen: 711,
+    name: "Black", edge-weight: 900, chosen: 675,
     candidates: (
-      (weight: 688, reason: "H stem @ 86%"),
-      (weight: 690, reason: "round density"),
-      (weight: 695, reason: "stem-text high"),
-      (weight: 711, reason: "40% density correction"),
+      (weight: 650, reason: "inverse-ratio low"),
+      (weight: 675, reason: "measured curve"),
+      (weight: 690, reason: "conservative"),
+      (weight: 711, reason: "previous release"),
     ),
   ),
 )
@@ -111,12 +111,12 @@
   features: (),
 ) = {
   // `tracking` is the final post-scale delta in 1/1000 em.
-  let inverse-width = if width == 84% {
-    100 / 84
-  } else if width == 86% {
-    100 / 86
-  } else if width == 88% {
-    100 / 88
+  let inverse-width = if width == 90% {
+    100 / 90
+  } else if width == 92% {
+    100 / 92
+  } else if width == 94% {
+    100 / 94
   } else {
     1
   }
@@ -162,7 +162,7 @@
       weight: style.chosen,
       italic: italic,
       size: size,
-      width: 86%,
+      width: 92%,
     ))
     if index + 1 < characters.len() {
       let pair = character + characters.at(index + 1)
@@ -172,7 +172,7 @@
       } else {
         (run.proof_pairs + run.matrix_pairs).find(item => item.pair == pair)
       }
-      let delta = 0.86 * (record.kern + (spacing-scale - 1) * record.bbox_gap)
+      let delta = 0.92 * (record.kern + (spacing-scale - 1) * record.bbox_gap)
       [#glyph#h(size * delta / 1000)]
     } else {
       glyph
@@ -193,7 +193,7 @@
       size: size,
     )
     if index + 1 < words.len() {
-      [#word#h(size * 0.25 * 0.86 * spacing-scale)]
+      [#word#h(size * 0.25 * 0.92 * spacing-scale)]
     } else {
       word
     }
@@ -237,8 +237,8 @@
     #v(1.2mm)
     #specimen-card(
       "Montserrat wght " + str(candidate.weight) + " · " + candidate.reason,
-      montserrat([Hamburgefontsiv RPB], weight: candidate.weight, italic: italic, size: 22pt, width: 86%),
-      line-two: montserrat([EDGE 0123456789], weight: candidate.weight, italic: italic, size: 13pt, width: 86%),
+      montserrat([Hamburgefontsiv RPB], weight: candidate.weight, italic: italic, size: 22pt, width: 92%),
+      line-two: montserrat([EDGE 0123456789], weight: candidate.weight, italic: italic, size: 13pt, width: 92%),
     )
   ]
 ]
@@ -251,7 +251,7 @@
   stroke: 0.45pt + faint,
   radius: 1.5mm,
 )[
-  #let width-label = if width == 84% { "84%" } else if width == 86% { "86%" } else { "88%" }
+  #let width-label = if width == 90% { "90%" } else if width == 92% { "92%" } else { "94%" }
   #text(size: 7pt, weight: 650, fill: muted)[width #width-label · tracking #if tracking > 0 [+]#str(tracking)]
   #v(1mm)
   #montserrat([Hamburgefontsiv RPB], weight: style.chosen, size: 17pt, width: width, tracking: tracking)
@@ -296,7 +296,7 @@
     weight: style.chosen,
     italic: italic,
     size: size,
-    width: 86%,
+    width: 92%,
     tracking: -5,
     vertical-adjust: vertical-adjust,
   )
@@ -310,13 +310,13 @@
       [language model],
       weight: style.chosen,
       size: size,
-      width: 86%,
+      width: 92%,
       tracking: -5,
     )]#box[#edge([의 성능 평가], weight: style.edge-weight, size: size)]
 ]
 
 #let mixed-figure-line(style, size: 13pt) = box()[
-  #box[#montserrat([GPU memory 24 GB], weight: style.chosen, size: size, width: 86%, tracking: -5)]#box[#edge([와], weight: style.edge-weight, size: size)]#script-gap(size)#box[#montserrat([inference latency 18 ms], weight: style.chosen, size: size, width: 86%, tracking: -5)]#box[#edge([를 측정합니다], weight: style.edge-weight, size: size)]#box[#montserrat([.], weight: style.chosen, size: size, width: 86%, tracking: -5)]
+  #box[#montserrat([GPU memory 24 GB], weight: style.chosen, size: size, width: 92%, tracking: -5)]#box[#edge([와], weight: style.edge-weight, size: size)]#script-gap(size)#box[#montserrat([inference latency 18 ms], weight: style.chosen, size: size, width: 92%, tracking: -5)]#box[#edge([를 측정합니다], weight: style.edge-weight, size: size)]#box[#montserrat([.], weight: style.chosen, size: size, width: 92%, tracking: -5)]
 ]
 
 #let paragraph-row(label, body, shade: false) = block(
@@ -364,7 +364,7 @@
     )).flatten(),
   )
   #v(8mm)
-  #text(size: 8pt, fill: muted)[Montserrat 9.000 variable fonts · UPM 1000 · proof width baseline 86%]
+  #text(size: 8pt, fill: muted)[Montserrat 9.000 variable fonts · UPM 1000 · proof width baseline 92%]
 ]
 
 // Method and reading guide
@@ -372,7 +372,7 @@
 #proof-title(
   "00 · GUIDE",
   "How to read this proof",
-  note: "The selected 40% long-text density correction is used downstream; local stroke candidates remain visible for reference.",
+  note: "The measured 0.92 source-weight curve is used downstream; local stroke candidates remain visible for reference.",
 )
 #grid(
   columns: (1fr, 1fr),
@@ -383,14 +383,14 @@
     #text(fill: muted)[
       • overall ink: ASCII letter/digit ink area per advance width\
       • round density: Oo068 group\
-      • H stem @ 86%: measured H vertical stem after horizontal compression\
+      • H stem @ 92%: measured H vertical stem after horizontal compression\
       • stem-text high: deliberately heavier upper control
     ]
     #v(5mm)
     #text(size: 11pt, weight: 700)[Width and tracking]
     #v(2mm)
     #text(fill: muted)[
-      The 3×3 matrix tests 84/86/88% width and −10/0/+10 units per em. Tracking labels denote the final post-scale delta.
+      The 3×3 matrix tests 90/92/94% width and −10/0/+10 units per em. Tracking labels denote the final post-scale delta.
     ]
   ],
   [
@@ -419,7 +419,7 @@
   #proof-title(
     "01 · WEIGHT MATCH",
     style.name + " · candidate comparison",
-    note: "All Montserrat samples use 86% width and zero added tracking. Reference is the proof-only SNU Edge v1 family.",
+    note: "All Montserrat samples use 92% width and zero added tracking. Reference is the proof-only SNU Edge v1 family.",
   )
   #grid(
     columns: (1fr, 1fr),
@@ -430,14 +430,14 @@
 ]
 
 // Width/tracking proof: complete 3×3 grid for every style.
-#let widths = (84%, 86%, 88%)
+#let widths = (90%, 92%, 94%)
 #let trackings = (-10, 0, 10)
 #for style in styles [
   #pagebreak()
   #proof-title(
     "02 · WIDTH × TRACKING",
     style.name + " · Montserrat wght " + str(style.chosen),
-    note: "Selected 40% density correction. Compare line length, counter shape, and spacing rhythm. The raw 100% control is shown above the matrix.",
+    note: "Selected 0.92 width and measured source weight. Compare line length, counter shape, and spacing rhythm. The raw 100% control is shown above the matrix.",
   )
   #grid(
     columns: (29mm, 1fr, 1fr),
@@ -500,7 +500,7 @@
 #proof-title(
   "04 · SIZE LADDER",
   "SNU Edge v1 reference × new proposal",
-  note: "The new proposal uses 86% width, −5 tracking, and native vertical geometry. Compare antialiasing, counters, and mixed-script color.",
+  note: "The new proposal uses 92% width, −5 tracking, and native vertical geometry. Compare antialiasing, counters, and mixed-script color.",
 )
 #grid(
   columns: (24mm, 15mm, 1fr, 1fr),
@@ -545,9 +545,9 @@
       [#text(size: 7pt, fill: muted)[V1]],
       [#edge([0123456789 · 2026/08/17 · ₩1,234,567], weight: style.edge-weight, size: 16pt)],
       [#text(size: 7pt, fill: muted)[NEW · DEFAULT]],
-      [#montserrat([0123456789 · 2026/08/17 · ₩1,234,567], weight: style.chosen, size: 16pt, width: 86%, tracking: -5)],
+      [#montserrat([0123456789 · 2026/08/17 · ₩1,234,567], weight: style.chosen, size: 16pt, width: 92%, tracking: -5)],
       [#text(size: 7pt, fill: muted)[NEW · TABULAR `tnum`]],
-      [#montserrat([0123456789 · 2026/08/17 · ₩1,234,567], weight: style.chosen, size: 16pt, width: 86%, tracking: -5, features: ("tnum",))],
+      [#montserrat([0123456789 · 2026/08/17 · ₩1,234,567], weight: style.chosen, size: 16pt, width: 92%, tracking: -5, features: ("tnum",))],
       [#text(size: 7pt, fill: muted)[NEW · MIXED]],
       [#mixed-figure-line(style, size: 13pt)],
     )
@@ -557,7 +557,7 @@
 
 // Spacing-system audit. The proportional samples preserve native kerning while
 // multiplying only bbox sidebearings and kerning; contour recessions stay at
-// the selected 86% outline width.
+// the selected 92% outline width.
 #pagebreak()
 #proof-title(
   "06 · SPACING SYSTEM",
@@ -583,7 +583,7 @@
     #block(width: 100%, inset: 3mm, stroke: 0.4pt + faint, radius: 1.5mm)[
       #text(size: 10pt, weight: 700)[Discarded additive control]
       #v(2mm)
-      #text(font: "DejaVu Sans Mono", size: 9pt)[gap′ = 0.86 × native gap − 5]
+      #text(font: "DejaVu Sans Mono", size: 9pt)[gap′ = 0.92 × native gap − 5]
       #v(2mm)
       #text(fill: muted)[The same 5-unit subtraction is proportionally strongest on pairs that were already tight.]
     ]
@@ -592,7 +592,7 @@
     #block(width: 100%, inset: 3mm, fill: panel, stroke: 0.4pt + faint, radius: 1.5mm)[
       #text(size: 10pt, weight: 700)[Selected production model]
       #v(2mm)
-      #text(font: "DejaVu Sans Mono", size: 8.5pt)[gap′ = 0.86 × (contour recession + q × bbox gap)]
+      #text(font: "DejaVu Sans Mono", size: 8.5pt)[gap′ = 0.92 × (contour recession + q × bbox gap)]
       #v(2mm)
       #text(fill: muted)[`bbox gap` is RSB(left) + LSB(right) + native kern. Curved and diagonal contour recessions are not treated as tracking.]
     ]
@@ -637,7 +637,7 @@
           weight: style.chosen,
           italic: italic,
           size: 15pt,
-          width: 86%,
+          width: 92%,
           tracking: -5,
         )],
         [#proportional-line(
@@ -653,7 +653,7 @@
           weight: style.chosen,
           italic: italic,
           size: 15pt,
-          width: 86%,
+          width: 92%,
           tracking: -5,
         )],
         [#proportional-line(
@@ -702,7 +702,7 @@
       gutter: 2mm,
       [#text(size: 7pt, weight: 700, fill: muted)[CONTEXT]],
       [#text(size: 7pt, weight: 700, fill: accent)[CURRENT · −5]],
-      [#text(size: 7pt, weight: 700, fill: accent)[PROPORTIONAL · q 0.90]],
+      [#text(size: 7pt, weight: 700, fill: accent)[PROPORTIONAL · q 0.88]],
       [#text(size: 7pt, weight: 700, fill: accent)[PROPORTIONAL · q 0.85]],
     )
     #v(1.5mm)
@@ -721,7 +721,7 @@
             weight: style.chosen,
             italic: italic,
             size: 11pt,
-            width: 86%,
+            width: 92%,
             tracking: -5,
           ),
           shade: calc.rem(index, 2) == 0,
@@ -730,7 +730,7 @@
           proportional-line(
             group.sample,
             style,
-            0.90,
+            0.88,
             italic: italic,
             size: 11pt,
           ),
@@ -778,7 +778,7 @@
             weight: style.chosen,
             italic: italic,
             size: 7pt,
-            width: 86%,
+            width: 92%,
             tracking: -5,
           )
         } else {
@@ -813,7 +813,7 @@
       (
         name: "current −5",
         spacing-scale: none,
-        note: "Every row/column combination is rendered as one shaping run with native Montserrat kerning, 86% width, and current −5 tracking.",
+        note: "Every row/column combination is rendered as one shaping run with native Montserrat kerning, 92% width, and current −5 tracking.",
       ),
       (
         name: "proportional q 0.85",
@@ -840,7 +840,7 @@
 // Raster H audit. The horizontal transform changes vertical stems but leaves
 // the center crossbar's vertical thickness unchanged, so the two measurements
 // expose Montserrat's changing H stroke contrast rather than conflating it with
-// the selected 86% width.
+// the selected 92% width.
 #let one-decimal(value) = str(calc.round(value * 10) / 10)
 
 #let h-weight-panel(style-record, italic: false) = {
@@ -894,7 +894,7 @@
     #proof-title(
       "08 · RASTER H WEIGHT MATCH",
       "Crossbar thickness at large raster size",
-      note: "All H glyphs are unhinted rasterizations at the same em size. Montserrat is compressed to 86% width; red brackets mark the crossbar. x(v) is the horizontal scale that would separately match the H vertical stem.",
+      note: "All H glyphs are unhinted rasterizations at the same em size. Montserrat is compressed to 92% width; red brackets mark the crossbar. x(v) is the horizontal scale that would separately match the H vertical stem.",
     )
     #grid(
       columns: (1fr, 1fr),

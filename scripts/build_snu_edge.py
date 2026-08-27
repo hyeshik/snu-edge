@@ -12,7 +12,7 @@ from typing import Iterable, Iterator, NamedTuple
 
 FAMILY_NAME = "SNU Edge"
 POSTSCRIPT_FAMILY_NAME = "SNUEdge"
-VERSION = "0.306"
+VERSION = "0.6.0"
 DEFAULT_SOURCE_ZIP_URL = (
     "https://campaign.naver.com/nanumsquare_neo/download/NaverNanumSquare.zip"
 )
@@ -47,6 +47,20 @@ TABULAR_FIGURE_NAMES = tuple(f"{name}.tf" for name in FIGURE_NAMES) + tuple(
     f"{name}.tosf" for name in FIGURE_NAMES
 )
 MODERN_HANGUL_RANGE = (0xAC00, 0xD7A3)
+
+
+def font_revision(version: str = VERSION) -> float:
+    parts = version.split(".")
+    if len(parts) not in (2, 3):
+        raise ValueError(f"Expected a major.minor[.patch] version: {version}")
+    major, minor = int(parts[0]), int(parts[1])
+    patch = int(parts[2]) if len(parts) == 3 else 0
+    if not 0 <= minor < 10 or not 0 <= patch < 100:
+        raise ValueError(
+            f"Version {version} cannot be mapped to a unique head.fontRevision; "
+            "pick a wider encoding before releasing it."
+        )
+    return round(major + minor / 10 + patch / 1000, 6)
 
 # These punctuation marks and symbols rely on roundness, equal dimensions, or
 # rotational symmetry. Scale them isotropically with the selected vertical
@@ -774,6 +788,7 @@ def build_variant(
             output_path,
             italic=italic,
             kern_scale=kern_scale,
+            revision=font_revision(),
         )
 
     guard_summary = "none"
