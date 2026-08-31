@@ -67,6 +67,9 @@ jobs:
       contents: write
 
     steps:
+      - name: Check out release notes
+        uses: actions/checkout@v7
+
       - name: Download package artifact
         uses: actions/download-artifact@v8
         with:
@@ -81,5 +84,5 @@ jobs:
             --repo "${GITHUB_REPOSITORY}" \
             dist/SNUEdge-*.zip \
             --title "${GITHUB_REF_NAME#v}" \
-            --generate-notes \
+            --notes-file RELEASE_NOTE.md \
             --verify-tag

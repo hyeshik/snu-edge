@@ -223,7 +223,7 @@ weight sources:
 
 This produces 16 OTF files in total.
 
-Every font reports version `0.6.0` in its OpenType name records and `0.6` in
+Every font reports version `0.6.1` in its OpenType name records and `0.601` in
 the numeric `head.fontRevision` field.
 
 ## Build Details
@@ -310,16 +310,16 @@ make distribution SOURCE_DIR=path/to/NanumSquare/fonts BUILD_FLAGS=--no-download
 The repository includes a GitHub Actions workflow at
 `.github/workflows/build-package.yml`. It runs on pushes, pull requests, tag
 pushes matching `v*`, and manual dispatches. The workflow installs FontForge,
-runs the unit tests, builds all 16 OTF files, creates `dist/SNUEdge-0.6.0.zip`,
+runs the unit tests, builds all 16 OTF files, creates `dist/SNUEdge-0.6.1.zip`,
 verifies the package, and uploads it as a workflow artifact. When the workflow
 is triggered by a tag matching `v*`, it also publishes a GitHub Release and
-attaches `SNUEdge-0.6.0.zip` as a release asset.
+attaches `SNUEdge-0.6.1.zip` as a release asset.
 
 Create and push a release tag:
 
 ```sh
-git tag v0.6.0
-git push origin v0.6.0
+git tag v0.6.1
+git push origin v0.6.1
 ```
 
 Reusing an existing release tag is intentionally treated as an error. Use a new
@@ -355,7 +355,11 @@ intentionally ignored by Git.
 SNU Edge is a Modified Version derived from NanumSquare font software from
 NAVER Corporation and Montserrat font software from the Montserrat Project
 Authors. The generated fonts are distributed under the SIL Open Font License,
-Version 1.1. See `LICENSE`.
+Version 1.1. The distribution and every generated OTF preserve NAVER's complete
+Nanum Reserved Font Name declaration while using `SNU Edge` / `SNUEdge` for all
+primary family names. Every output sets `OS/2.fsType` to `0` so inherited
+embedding restrictions do not contradict the OFL. See `LICENSE` and
+`licenses/`.
 
 The upstream `NaverNanumSquare.zip` archive downloaded by this project does not
 currently include a standalone license file. The license notice in this

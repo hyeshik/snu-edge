@@ -12,7 +12,7 @@ from typing import Iterable, Iterator, NamedTuple
 
 FAMILY_NAME = "SNU Edge"
 POSTSCRIPT_FAMILY_NAME = "SNUEdge"
-VERSION = "0.6.0"
+VERSION = "0.6.1"
 DEFAULT_SOURCE_ZIP_URL = (
     "https://campaign.naver.com/nanumsquare_neo/download/NaverNanumSquare.zip"
 )
@@ -47,6 +47,32 @@ TABULAR_FIGURE_NAMES = tuple(f"{name}.tf" for name in FIGURE_NAMES) + tuple(
     f"{name}.tosf" for name in FIGURE_NAMES
 )
 MODERN_HANGUL_RANGE = (0xAC00, 0xD7A3)
+
+NANUM_RESERVED_FONT_NAMES = (
+    "Nanum, Naver Nanum, NanumGothic, Naver NanumGothic, NanumMyeongjo, "
+    "Naver NanumMyeongjo, NanumBrush, Naver NanumBrush, NanumPen, "
+    "Naver NanumPen, NanumGothicEco, NanumGothicEco, "
+    "Naver NanumMyeongjoEco, NanumMyeongjoEco, Naver NanumGothicLight, "
+    "NanumGothicLight, NanumBarunGothic, Naver NanumBarunGothic, "
+    "NanumSquareRound, NanumBarunPen, MaruBuri, NanumSquareNeo"
+)
+NANUM_COPYRIGHT_RFN = (
+    "Copyright (c) 2010, NAVER Corporation (https://www.navercorp.com/) "
+    f"with Reserved Font Name {NANUM_RESERVED_FONT_NAMES}."
+)
+MONTSERRAT_COPYRIGHT = (
+    "Copyright 2024 The Montserrat.Git Project Authors "
+    "(https://github.com/JulietaUla/Montserrat.git)."
+)
+DERIVATIVE_COPYRIGHT = "Copyright (c) 2026 Hyeshik Chang (modifications)."
+COPYRIGHT_TEXT = " ".join(
+    (NANUM_COPYRIGHT_RFN, MONTSERRAT_COPYRIGHT, DERIVATIVE_COPYRIGHT)
+)
+LICENSE_DESCRIPTION = (
+    "This Font Software is licensed under the SIL Open Font License, Version 1.1. "
+    f"Reserved Font Names declared by NAVER: {NANUM_RESERVED_FONT_NAMES}."
+)
+LICENSE_URL = "https://openfontlicense.org"
 
 
 def font_revision(version: str = VERSION) -> float:
@@ -670,10 +696,11 @@ def rewrite_metadata(font, spec: StyleSpec, italic: bool, italic_angle: float) -
     font.fontname = ps_name
     font.weight = "Normal" if spec.style == "Regular" else spec.style
     font.version = VERSION
-    font.copyright = "SNU Edge is a derivative build from NanumSquare and Montserrat."
+    font.copyright = COPYRIGHT_TEXT
     font.italicangle = italic_angle if italic else 0
     font.os2_weight = spec.weight
     font.os2_width = 5
+    font.os2_fstype = 0
     font.os2_vendor = "SNUE"
     font.os2_stylemap = (1 if italic else 0) | (32 if spec.weight >= 700 else 0)
     if not italic and spec.weight == 400:
@@ -683,7 +710,7 @@ def rewrite_metadata(font, spec: StyleSpec, italic: bool, italic_angle: float) -
         (
             "English (US)",
             "Copyright",
-            "SNU Edge is a derivative build from NanumSquare and Montserrat.",
+            COPYRIGHT_TEXT,
         ),
         ("English (US)", "Family", FAMILY_NAME),
         ("English (US)", "SubFamily", output_style),
@@ -704,6 +731,8 @@ def rewrite_metadata(font, spec: StyleSpec, italic: bool, italic_angle: float) -
         ("English (US)", "Preferred Family", FAMILY_NAME),
         ("English (US)", "Preferred Styles", output_style),
         ("English (US)", "Compatible Full", full_name),
+        ("English (US)", "License", LICENSE_DESCRIPTION),
+        ("English (US)", "License URL", LICENSE_URL),
     )
 
 def output_path_for(output_dir: Path, spec: StyleSpec, italic: bool) -> Path:

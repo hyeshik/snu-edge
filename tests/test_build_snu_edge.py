@@ -1,5 +1,6 @@
 import importlib.util
 import pathlib
+import types
 import unittest
 
 
@@ -20,7 +21,7 @@ class BuildSnuEdgeTests(unittest.TestCase):
 
         self.assertEqual(builder.FAMILY_NAME, "SNU Edge")
         self.assertEqual(builder.POSTSCRIPT_FAMILY_NAME, "SNUEdge")
-        self.assertEqual(builder.VERSION, "0.6.0")
+        self.assertEqual(builder.VERSION, "0.6.1")
         self.assertEqual(
             builder.DEFAULT_SOURCE_ZIP_URL,
             "https://campaign.naver.com/nanumsquare_neo/download/NaverNanumSquare.zip",
@@ -32,10 +33,34 @@ class BuildSnuEdgeTests(unittest.TestCase):
         self.assertEqual(builder.DEFAULT_LATIN_Y_SCALE, 1.028)
         self.assertEqual(builder.DEFAULT_LATIN_Y_SHIFT, -26)
 
+    def test_metadata_preserves_upstream_rfn_and_license(self):
+        builder = load_builder()
+        font = types.SimpleNamespace()
+        spec = next(spec for spec in builder.STYLE_SPECS if spec.style == "Regular")
+
+        builder.rewrite_metadata(font, spec, italic=False, italic_angle=0)
+        names = {field: value for _, field, value in font.sfnt_names}
+
+        self.assertEqual(font.copyright, builder.COPYRIGHT_TEXT)
+        self.assertIn("with Reserved Font Name Nanum", names["Copyright"])
+        self.assertIn("The Montserrat.Git Project Authors", names["Copyright"])
+        self.assertIn("Hyeshik Chang (modifications)", names["Copyright"])
+        self.assertIn("Reserved Font Names declared by NAVER", names["License"])
+        self.assertEqual(names["License URL"], "https://openfontlicense.org")
+        self.assertEqual(font.os2_fstype, 0)
+        for field in (
+            "Family",
+            "Fullname",
+            "PostScriptName",
+            "Preferred Family",
+            "Compatible Full",
+        ):
+            self.assertNotIn("Nanum", names[field])
+
     def test_head_revision_uses_the_semantic_font_version(self):
         builder = load_builder()
 
-        self.assertEqual(builder.font_revision(), 0.6)
+        self.assertEqual(builder.font_revision(), 0.601)
         self.assertEqual(builder.font_revision("0.6.1"), 0.601)
         self.assertEqual(builder.font_revision("1.0"), 1.0)
         for ambiguous in ("0.10.0", "0.6.100", "0"):

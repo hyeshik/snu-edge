@@ -17,6 +17,16 @@ def load_packager():
 
 
 class PackageDistributionTests(unittest.TestCase):
+    def test_license_headers_preserve_nanum_rfn_and_modification_copyright(self):
+        project_license = (ROOT / "LICENSE").read_text()
+        upstream_license = (ROOT / "licenses" / "NanumSquare.txt").read_text()
+        project_header = project_license.split("This Font Software", 1)[0]
+        upstream_header = upstream_license.split("This Font Software", 1)[0]
+
+        self.assertIn("with Reserved Font Name Nanum", project_header)
+        self.assertIn("with Reserved Font Name Nanum", upstream_header)
+        self.assertIn("Hyeshik Chang (modifications)", project_header)
+
     def test_distribution_contains_only_flat_fonts_and_licenses(self):
         packager = load_packager()
 

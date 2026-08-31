@@ -8,7 +8,10 @@ from fontTools.pens.boundsPen import BoundsPen
 from fontTools.ttLib import TTFont
 
 from build_snu_edge import (
+    COPYRIGHT_TEXT,
     FAMILY_NAME,
+    LICENSE_DESCRIPTION,
+    LICENSE_URL,
     MODERN_HANGUL_RANGE,
     POSTSCRIPT_FAMILY_NAME,
     STYLE_SPECS,
@@ -310,11 +313,18 @@ def verify_font(
     expected_ps_name = (
         f"{POSTSCRIPT_FAMILY_NAME}-{postscript_style_name(spec.style, italic)}"
     )
+    expected_full_name = f"{FAMILY_NAME} {expected_style}"
     expected_names = {
+        0: COPYRIGHT_TEXT,
         1: FAMILY_NAME,
         2: expected_style,
+        4: expected_full_name,
         5: f"Version {VERSION}",
         6: expected_ps_name,
+        13: LICENSE_DESCRIPTION,
+        14: LICENSE_URL,
+        16: FAMILY_NAME,
+        18: expected_full_name,
     }
     for name_id, expected in expected_names.items():
         actual = names.getDebugName(name_id)
@@ -333,6 +343,8 @@ def verify_font(
 
     if font["OS/2"].usWeightClass != spec.weight:
         raise ValueError(f"{path}: incorrect OS/2 weight class")
+    if font["OS/2"].fsType != 0:
+        raise ValueError(f"{path}: OS/2.fsType must allow installable embedding")
     italic_angle = font["post"].italicAngle
     if italic and italic_angle == 0:
         raise ValueError(f"{path}: italic output has an upright italic angle")

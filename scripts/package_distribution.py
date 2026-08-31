@@ -41,7 +41,7 @@ def build_parser() -> argparse.ArgumentParser:
         description="Create the flat SNU Edge distribution ZIP."
     )
     parser.add_argument("--input-dir", default="instance_otf")
-    parser.add_argument("--output", default="dist/SNUEdge-0.6.0.zip")
+    parser.add_argument("--output", default="dist/SNUEdge-0.6.1.zip")
     parser.add_argument("--project-root", default=str(PROJECT_ROOT))
     return parser
 
