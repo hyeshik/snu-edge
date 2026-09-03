@@ -28,10 +28,25 @@ class BuildSnuEdgeTests(unittest.TestCase):
         )
         self.assertEqual(builder.DEFAULT_CJK_GLYPH_X_SCALE, 0.96)
         self.assertEqual(builder.DEFAULT_CJK_SPACING_SCALE, 0.86)
+        self.assertEqual(builder.DEFAULT_HANGUL_Y_SCALE, 1.0)
+        self.assertAlmostEqual(
+            builder.DEFAULT_HANGUL_Y_SHIFT,
+            19.38596491228069,
+        )
         self.assertEqual(builder.DEFAULT_LATIN_GLYPH_X_SCALE, 0.92)
         self.assertEqual(builder.DEFAULT_LATIN_SPACING_RATIO, 0.88)
         self.assertEqual(builder.DEFAULT_LATIN_Y_SCALE, 1.028)
         self.assertEqual(builder.DEFAULT_LATIN_Y_SHIFT, -26)
+
+    def test_hangul_optical_restore_keeps_other_cjk_unchanged(self):
+        builder = load_builder()
+
+        for codepoint in (0x1100, 0x3131, 0xA960, 0xAC00, 0xD7A3, 0xD7B0):
+            with self.subTest(codepoint=codepoint):
+                self.assertTrue(builder.is_hangul_codepoint(codepoint))
+        for codepoint in (0x0041, 0x3001, 0x4E00, 0xD7A4):
+            with self.subTest(codepoint=codepoint):
+                self.assertFalse(builder.is_hangul_codepoint(codepoint))
 
     def test_metadata_preserves_upstream_rfn_and_license(self):
         builder = load_builder()

@@ -232,6 +232,10 @@ Default CJK geometry settings:
 
 - NanumSquare horizontal outline scale: `0.96`
 - NanumSquare sidebearing scale: `0.86`
+- Hangul vertical scale: `1.0`
+- Hangul baseline shift: `+19.386` units. This is the adopted
+  Original:Appendard 2:1 baseline adjustment with full optical-size
+  restoration; Hangul width and advance remain unchanged.
 
 Default Montserrat settings selected by the proofs and raster audits:
 

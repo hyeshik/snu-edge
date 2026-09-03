@@ -22,6 +22,8 @@ DEFAULT_MONTSERRAT_DIR = "vendor/montserrat"
 DEFAULT_OUTPUT_DIR = "instance_otf"
 DEFAULT_CJK_GLYPH_X_SCALE = 0.96
 DEFAULT_CJK_SPACING_SCALE = 0.86
+DEFAULT_HANGUL_Y_SCALE = 1.0
+DEFAULT_HANGUL_Y_SHIFT = 19.38596491228069
 DEFAULT_LATIN_GLYPH_X_SCALE = 0.92
 DEFAULT_LATIN_SPACING_RATIO = 0.88
 DEFAULT_LATIN_Y_SCALE = 1.028
@@ -224,6 +226,14 @@ CJK_CODEPOINT_RANGES = (
     (0x30000, 0x3134F),
 )
 
+HANGUL_CODEPOINT_RANGES = (
+    (0x1100, 0x11FF),
+    (0x3130, 0x318F),
+    (0xA960, 0xA97F),
+    (0xAC00, 0xD7A3),
+    (0xD7B0, 0xD7FF),
+)
+
 @contextlib.contextmanager
 def suppress_c_stderr(enabled: bool) -> Iterator[None]:
     if not enabled:
@@ -335,6 +345,9 @@ def ensure_source_fonts(args: argparse.Namespace) -> dict[str, Path]:
 
 def is_cjk_codepoint(codepoint: int) -> bool:
     return any(start <= codepoint <= end for start, end in CJK_CODEPOINT_RANGES)
+
+def is_hangul_codepoint(codepoint: int) -> bool:
+    return any(start <= codepoint <= end for start, end in HANGUL_CODEPOINT_RANGES)
 
 def adjusted_glyph_metrics(
     *,
@@ -516,6 +529,26 @@ def adjust_cjk_glyphs(font, x_scale: float, spacing_scale: float) -> int:
             glyph, x_scale, spacing_scale
         ):
             changed += 1
+    return changed
+
+def adjust_hangul_vertical_geometry(font) -> int:
+    changed = 0
+    for glyph in list(font.glyphs()):
+        if not is_hangul_codepoint(glyph.unicode):
+            continue
+        if glyph.references:
+            glyph.unlinkRef()
+        glyph.transform(
+            (
+                1,
+                0,
+                0,
+                DEFAULT_HANGUL_Y_SCALE,
+                0,
+                DEFAULT_HANGUL_Y_SHIFT,
+            )
+        )
+        changed += 1
     return changed
 
 def apply_synthetic_weight(font, offset_width: int, quiet: bool) -> int:
@@ -799,6 +832,7 @@ def build_variant(
                 x_scale=args.cjk_glyph_x_scale,
                 spacing_scale=args.cjk_spacing_scale,
             )
+            hangul_adjusted = adjust_hangul_vertical_geometry(font)
             nanum_removed = remove_non_cjk_glyphs(font)
             with suppress_c_stderr(quiet):
                 font.mergeFonts(str(transformed_latin_path))
@@ -825,6 +859,9 @@ def build_variant(
         guard_summary = f"{guard_stats.guard_min}..{guard_stats.guard_max}"
     print(
         f"{output_path}: cjk_adjusted={cjk_adjusted}, "
+        f"hangul_adjusted={hangul_adjusted}, "
+        f"hangul_y_scale={DEFAULT_HANGUL_Y_SCALE:.4f}, "
+        f"hangul_y_shift={DEFAULT_HANGUL_Y_SHIFT:.3f}, "
         f"synthetic_weighted={synthetic_changed}, "
         f"synthetic_offset_width={synthetic_offset_width}, "
         f"nanum_non_cjk_removed={nanum_removed}, "
