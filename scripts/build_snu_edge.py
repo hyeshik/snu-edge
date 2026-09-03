@@ -12,7 +12,7 @@ from typing import Iterable, Iterator, NamedTuple
 
 FAMILY_NAME = "SNU Edge"
 POSTSCRIPT_FAMILY_NAME = "SNUEdge"
-VERSION = "0.6.1"
+VERSION = "0.6.2"
 DEFAULT_SOURCE_ZIP_URL = (
     "https://campaign.naver.com/nanumsquare_neo/download/NaverNanumSquare.zip"
 )

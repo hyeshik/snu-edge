@@ -21,7 +21,7 @@ class BuildSnuEdgeTests(unittest.TestCase):
 
         self.assertEqual(builder.FAMILY_NAME, "SNU Edge")
         self.assertEqual(builder.POSTSCRIPT_FAMILY_NAME, "SNUEdge")
-        self.assertEqual(builder.VERSION, "0.6.1")
+        self.assertEqual(builder.VERSION, "0.6.2")
         self.assertEqual(
             builder.DEFAULT_SOURCE_ZIP_URL,
             "https://campaign.naver.com/nanumsquare_neo/download/NaverNanumSquare.zip",
@@ -75,8 +75,8 @@ class BuildSnuEdgeTests(unittest.TestCase):
     def test_head_revision_uses_the_semantic_font_version(self):
         builder = load_builder()
 
-        self.assertEqual(builder.font_revision(), 0.601)
-        self.assertEqual(builder.font_revision("0.6.1"), 0.601)
+        self.assertEqual(builder.font_revision(), 0.602)
+        self.assertEqual(builder.font_revision("0.6.2"), 0.602)
         self.assertEqual(builder.font_revision("1.0"), 1.0)
         for ambiguous in ("0.10.0", "0.6.100", "0"):
             with self.assertRaises(ValueError):

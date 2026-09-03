@@ -1,31 +1,26 @@
-# SNU Edge v0.6.1
+# SNU Edge v0.6.2
 
-SNU Edge 0.6.1 strengthens copyright and SIL Open Font License metadata without
-changing glyph outlines, metrics, kerning, weight assignments, or family names.
+SNU Edge 0.6.2 aligns its Hangul baseline geometry with the current SNU font
+family while preserving the established optical size and horizontal rhythm.
 
-## Copyright and license changes
+## Hangul geometry
 
-- The main license now identifies Hyeshik Chang's modifications alongside the
-  preserved NAVER and Montserrat copyright statements.
-- Every OTF carries NAVER's complete Nanum Reserved Font Name declaration, the
-  Montserrat copyright, and the modification copyright in OpenType name ID 0.
-- OpenType name ID 13 records the SIL Open Font License 1.1 and the complete
-  NAVER RFN list. Name ID 14 links to the official OFL site.
-- `OS/2.fsType` is normalized from the upstream value to `0` so the fonts
-  advertise installable embedding consistently with the OFL.
-- The production verifier and unit tests require the RFN declaration in
-  copyright and license metadata while rejecting `Nanum` from all user-facing
-  SNU Edge primary names.
-
-The family remains `SNU Edge` / `SNUEdge`; upstream font names appear only in
-copyright, license, attribution, and source documentation contexts.
+- Every encoded Hangul syllable and Hangul Jamo receives a `+19.386` unit
+  vertical shift.
+- The adjustment is the reviewed Original:Appendard `2:1` baseline fit with
+  full optical-size restoration.
+- Hangul outline scale, width, and advance remain unchanged.
+- Han, kana, Bopomofo, CJK punctuation, Montserrat Latin, figures, kerning,
+  weight assignments, and native italic outlines remain unchanged.
+- Automated tests cover the Hangul ranges and ensure the adjustment does not
+  extend to unrelated CJK or Latin glyphs.
 
 ## Distribution
 
-The release asset is `SNUEdge-0.6.1.zip`. Its flat archive root contains 16
+The release asset is `SNUEdge-0.6.2.zip`. Its flat archive root contains 16
 static OTF files plus `LICENSE.txt`, `LICENSE-Montserrat.txt`, and
 `LICENSE-NanumSquare.txt`. Proofs, source fonts, and project files are not
 included.
 
-Every font reports `Version 0.6.1` in OpenType name ID 5 and `0.601` in
+Every font reports `Version 0.6.2` in OpenType name ID 5 and `0.602` in
 `head.fontRevision`.
