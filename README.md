@@ -1,5 +1,7 @@
 # SNU Edge
 
+Explore the complete SNU typeface collection on the [QBio Fonts website](https://qbio.io/share/fonts/).
+
 SNU Edge combines NanumSquare CJK glyphs with Montserrat non-CJK glyphs in
 one OpenType family. A fresh build downloads and verifies both upstream sources,
 selects the measured Montserrat weight for each SNU Edge style, applies the
